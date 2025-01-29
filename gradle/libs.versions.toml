@@ -2,11 +2,13 @@
 fabric_loom = "1.8-SNAPSHOT"
 minotaur = "2.+"
 
-minecraft = "1.21"
-yarn = "1.21+build.9"
+minecraft = "1.21.4"
+yarn = "1.21.4+build.8"
 
-fabric_loader = "0.16.5"
-fabric_api = "0.109.0+1.21.1"
+fabric_loader = "0.16.10"
+fabric_api = "0.115.0+1.21.4"
+
+specter = "1.1.2"
 
 [plugins]
 fabric_loom = { id = "fabric-loom", version.ref = "fabric_loom" }
@@ -18,3 +20,14 @@ yarn = { group = "net.fabricmc", name = "yarn", version.ref = "yarn" }
 
 fabric_loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = "fabric_loader" }
 fabric_api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.ref = "fabric_api" }
+
+specter_config = { group = "dev.spiritstudios.specter", name = "specter-config", version.ref = "specter" }
+specter_core = { group = "dev.spiritstudios.specter", name = "specter-core", version.ref = "specter" }
+specter_serialization = { group = "dev.spiritstudios.specter", name = "specter-serialization", version.ref = "specter" }
+
+[bundles]
+specter = [
+	"specter_serialization",
+	"specter_core",
+	"specter_config",
+]

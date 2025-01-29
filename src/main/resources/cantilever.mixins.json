@@ -1,9 +1,9 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "dev.spiritstudios.template.mixin.client",
+  "package": "dev.spiritstudios.cantilever.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": [
+  "mixins": [
   ],
   "injectors": {
     "defaultRequire": 1
