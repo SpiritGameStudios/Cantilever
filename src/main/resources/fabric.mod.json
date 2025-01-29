@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${mod_version}",
+  "name": "Template",
+  "description": "",
+  "authors": [],
+  "contact": {
+    "repo": "https://github.com/SpiritGameStudios/Template",
+    "issues": "https://github.com/SpiritGameStudios/Template/issues"
+  },
+  "license": "MPL-2.0",
+  "icon": "assets/template/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "dev.spiritstudios.template.TemplateClient"
+    ],
+    "main": [
+      "dev.spiritstudios.template.Template"
+    ]
+  },
+  "mixins": [
+    "template.mixins.json",
+    {
+      "config": "template.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "fabric-api": "*",
+    "java": ">=21"
+  }
+}
