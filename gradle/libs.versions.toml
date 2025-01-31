@@ -9,6 +9,7 @@ fabric_loader = "0.16.10"
 fabric_api = "0.115.0+1.21.4"
 
 specter = "1.1.2"
+javacord = "3.8.0"
 
 [plugins]
 fabric_loom = { id = "fabric-loom", version.ref = "fabric_loom" }
@@ -25,9 +26,11 @@ specter_config = { group = "dev.spiritstudios.specter", name = "specter-config",
 specter_core = { group = "dev.spiritstudios.specter", name = "specter-core", version.ref = "specter" }
 specter_serialization = { group = "dev.spiritstudios.specter", name = "specter-serialization", version.ref = "specter" }
 
+javacord = { group = "org.javacord", name = "javacord", version.ref = "javacord" }
+
 [bundles]
 specter = [
 	"specter_serialization",
 	"specter_core",
-	"specter_config",
+	"specter_config"
 ]

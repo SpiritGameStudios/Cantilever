@@ -1,29 +1,30 @@
 {
-  "schemaVersion": 1,
-  "id": "${mod_id}",
-  "version": "${mod_version}",
-  "name": "Cantilever",
-  "description": "No-nonsense Minecraft ↔ Discord bridge",
-  "authors": [],
-  "contact": {
-    "repo": "https://github.com/SpiritGameStudios/Cantilever",
-    "issues": "https://github.com/SpiritGameStudios/Cantilever/issues"
-  },
-  "license": "MPL-2.0",
-  "icon": "assets/cantilever/icon.png",
-  "environment": "*",
-  "entrypoints": {
-    "main": [
-		"dev.spiritstudios.cantilever.Cantilever"
-    ]
-  },
-  "mixins": [
-	  "cantilever.mixins.json"
-  ],
-  "depends": {
-    "fabricloader": ">=${fabric_loader_version}",
-    "minecraft": "~${minecraft_version}",
-    "fabric-api": "*",
-    "java": ">=21"
-  }
+	"schemaVersion": 1,
+	"id": "${mod_id}",
+	"version": "${mod_version}",
+	"name": "Cantilever",
+	"description": "No-nonsense Minecraft ↔ Discord bridge",
+	"authors": [],
+	"contact": {
+		"repo": "https://github.com/SpiritGameStudios/Cantilever",
+		"issues": "https://github.com/SpiritGameStudios/Cantilever/issues"
+	},
+	"license": "MPL-2.0",
+	"icon": "assets/cantilever/icon.png",
+	"environment": "server",
+	"entrypoints": {
+		"main": [
+			"dev.spiritstudios.cantilever.Cantilever"
+		]
+	},
+	"mixins": [
+		"cantilever.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=${fabric_loader_version}",
+		"minecraft": "~${minecraft_version}",
+		"fabric-api": "*",
+		"java": ">=21",
+		"specter-core": "*"
+	}
 }

@@ -3,6 +3,7 @@ package dev.spiritstudios.cantilever.bridge;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.spiritstudios.cantilever.Cantilever;
 import net.minecraft.text.*;
 
 import java.util.Optional;
@@ -12,14 +13,12 @@ public record BridgeTextContent(Text content, boolean bot) implements TextConten
 		instance -> instance.group(
 			TextCodecs.CODEC.fieldOf("text").forGetter(BridgeTextContent::content),
 			Codec.BOOL.fieldOf("bot").forGetter(BridgeTextContent::bot)
-		).apply(
-			instance, BridgeTextContent::new
-		)
+		).apply(instance, BridgeTextContent::new)
 	);
 
 	public static final TextContent.Type<BridgeTextContent> TYPE = new Type<>(
 		CODEC,
-		"bot"
+		Cantilever.MODID + ":bridge"
 	);
 
 	@Override
@@ -31,7 +30,6 @@ public record BridgeTextContent(Text content, boolean bot) implements TextConten
 	public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
 		return content.visit(visitor, style);
 	}
-
 
 	@Override
 	public Type<?> getType() {

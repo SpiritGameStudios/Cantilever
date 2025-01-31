@@ -1,45 +1,56 @@
 package dev.spiritstudios.cantilever.bridge;
 
+import dev.spiritstudios.cantilever.Cantilever;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 
 public class BridgeEvents {
-	private final Bridge bridge;
+	private static Bridge bridge;
 
-	public BridgeEvents(Bridge bridge) {
-		this.bridge = bridge;
+	public static void init(Bridge bridge) {
+		BridgeEvents.bridge = bridge;
 
 		registerMinecraftEvents();
 		registerDiscordEvents();
 	}
 
-	private void registerMinecraftEvents() {
+	private static void registerMinecraftEvents() {
+		ServerLifecycleEvents.SERVER_STARTING.register(
+			Identifier.of(Cantilever.MODID, "after_bridge"),
+			server -> {
+				BridgeEvents.bridge.sendBasicMessageM2D("**Server starting...**");
+			}
+		);
+
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-			this.bridge.sendBasicMessageM2D("**Server started**");
+			BridgeEvents.bridge.sendBasicMessageM2D("**Server started**");
 		});
+
 		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-			this.bridge.sendBasicMessageM2D("**Server stopping**");
+			BridgeEvents.bridge.sendBasicMessageM2D("**Server stopping...**");
 		});
+
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-			this.bridge.sendBasicMessageM2D("**Server stopped**");
+			BridgeEvents.bridge.sendBasicMessageM2D("**Server stopped**");
 		});
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
 			if (message.getContent() instanceof BridgeTextContent content && content.bot()) {
 				return;
 			}
-			this.bridge.sendBasicMessageM2D("**%s**".formatted(message.getString()));
+			BridgeEvents.bridge.sendBasicMessageM2D("**%s**".formatted(message.getString()));
 		});
 		ServerMessageEvents.CHAT_MESSAGE.register((message, user, params) -> {
-			this.bridge.sendBasicMessageM2D("%s: %s".formatted(user.getName().getString(), message.getContent().getString()));
+			BridgeEvents.bridge.sendBasicMessageM2D("%s: %s".formatted(user.getName().getString(), message.getContent().getString()));
 		});
 	}
 
-	private void registerDiscordEvents() {
-		this.bridge.getDiscordApi().addMessageCreateListener(event -> {
-			if (event.getChannel() == this.bridge.bridgeChannel && !event.getMessageAuthor().isYourself()) {
-				this.bridge.sendBasicMessageD2M(
+	private static void registerDiscordEvents() {
+		BridgeEvents.bridge.api().addMessageCreateListener(event -> {
+			if (BridgeEvents.bridge.channel().map(c -> c == event.getChannel()).orElse(false) && !event.getMessageAuthor().isYourself()) {
+				BridgeEvents.bridge.sendBasicMessageD2M(
 					new BridgeTextContent(
 						Text.of(
 							"<@%s> %s".formatted(

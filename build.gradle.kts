@@ -40,7 +40,8 @@ dependencies {
 
 	include(libs.bundles.specter)
 	modImplementation(libs.bundles.specter)
-	implementation("org.javacord:javacord:3.8.0")
+
+	implementation(libs.javacord)
 }
 
 tasks.processResources {
