@@ -15,4 +15,6 @@ public class CantileverConfig extends Config<CantileverConfig> {
 	public final Value<Long> channelId = value(123456789L, Codec.LONG)
 		.comment("You can get this value by enabling developer mode in discord and right clicking the channel you wish to use as your bridge.")
 		.build();
+	public final Value<String> gameEventFormat = stringValue("**%s**").build();
+	public final Value<String> gameChatFormat = stringValue("<@%s> %s").build();
 }

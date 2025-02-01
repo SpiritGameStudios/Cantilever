@@ -29,6 +29,7 @@ loom {
 repositories {
 	mavenCentral()
 	maven("https://maven.spiritstudios.dev/releases/")
+	maven("https://maven.nucleoid.xyz/") { name = "Nucleoid" }
 }
 
 dependencies {
@@ -42,6 +43,9 @@ dependencies {
 	modImplementation(libs.bundles.specter)
 
 	implementation(libs.javacord)
+
+	include("eu.pb4:placeholder-api:2.5.2+1.21.3")
+	modImplementation("eu.pb4:placeholder-api:2.5.2+1.21.3")
 }
 
 tasks.processResources {
