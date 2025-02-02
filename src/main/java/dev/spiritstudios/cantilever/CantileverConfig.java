@@ -21,4 +21,7 @@ public class CantileverConfig extends Config<CantileverConfig> {
 	public final Value<String> gameChatFormat = stringValue("<@%s> %s")
 		.comment("Use a first %s in your value to slot in a username, and a second to slot in the chat message content.")
 		.build();
+	public final Value<String> webhookFaceApi = stringValue("https://vzge.me/face/256/%s.png")
+		.comment("Use a %s slot to set the player UUID for your head service of choice!")
+		.build();
 }

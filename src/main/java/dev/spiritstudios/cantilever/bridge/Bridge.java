@@ -105,7 +105,7 @@ public class Bridge {
 	public void sendWebhookMessageM2D(SignedMessage message, ServerPlayerEntity sender) {
 		URL avatarUrl;
 		try {
-			avatarUrl = URI.create("https://api.nucleoid.xyz/skin/face/256/%s".formatted(sender.getUuidAsString())).toURL();
+			avatarUrl = URI.create(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString())).toURL();
 		} catch (MalformedURLException e) {
 			sendBasicMessageM2D(message.getContent().getString());
 			return;
