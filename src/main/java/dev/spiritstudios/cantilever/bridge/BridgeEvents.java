@@ -2,15 +2,13 @@ package dev.spiritstudios.cantilever.bridge;
 
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
-import eu.pb4.placeholders.api.PlaceholderContext;
-import eu.pb4.placeholders.api.parsers.MarkdownLiteParserV1;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 public class BridgeEvents {
 	private static Bridge bridge;
-	private static final MarkdownLiteParserV1 markdownParser = new MarkdownLiteParserV1();
 
 	public static void init(Bridge bridge) {
 		BridgeEvents.bridge = bridge;
@@ -53,11 +51,10 @@ public class BridgeEvents {
 				BridgeEvents.bridge.getWebhookId() != event.getMessageAuthor().getId()) {
 				BridgeEvents.bridge.sendBasicMessageD2M(
 					new BridgeTextContent(
-						markdownParser.parseText(
+						Text.of(
 							CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
 								event.getMessageAuthor().getName(), event.getMessageContent()
-							),
-							PlaceholderContext.of(bridge.server).asParserContext()
+							)
 						),
 						true
 					)
