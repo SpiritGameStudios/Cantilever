@@ -1,6 +1,6 @@
 # Cantilever
 
-🌉 No-nonsense Minecraft ↔ Discord bridge - name suggestions welcome
+No-nonsense Minecraft ↔ Discord bridge
 
 <img alt="Available for Fabric" src="https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/compact/supported/fabric_vector.svg">
 
@@ -8,7 +8,16 @@
 
 <img alt="Made by Spirit Studios" src="https://raw.githubusercontent.com/SpiritGameStudios/.github/main/assets/brand/badge/compact.svg">
 
-<h3>something something</h3>
-
 ## 📔 About
 
+Inspired by the many other bridge mod options between Minecraft and Discord, Cantilever strives to provide a simple, no-fuss option for everyone to enjoy.
+
+## ❓ FAQ
+* Forge? <br/>
+  No. Please do not ask us for a forge port.
+
+* Do you plan to / Could you add `X`? <br/>
+  If you want to suggest something, join the [discord](https://discord.gg/TTmx7d2axf).
+
+* Can you port/backport to `X` version? <br/>
+  Probably not. Multi-version projects are hard :(

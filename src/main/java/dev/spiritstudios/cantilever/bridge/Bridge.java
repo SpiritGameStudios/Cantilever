@@ -15,6 +15,7 @@ import org.javacord.api.entity.intent.Intent;
 import org.javacord.api.entity.message.MessageBuilder;
 import org.javacord.api.entity.message.WebhookMessageBuilder;
 import org.javacord.api.entity.webhook.IncomingWebhook;
+import org.javacord.api.entity.webhook.Webhook;
 import org.javacord.api.entity.webhook.WebhookBuilder;
 
 import java.net.MalformedURLException;
@@ -63,14 +64,20 @@ public class Bridge {
 				);
 
 				this.bridgeChannel.getWebhooks().thenAccept(webhooks -> {
-					if (webhooks.stream().anyMatch(hook -> {
-						if (hook.getName().isPresent()) {
-							return hook.getName().get().equals("Cantilever Bridge Webhook %s".formatted(bridgeChannelId));
-						}
-						return false;
-					})) {
-						Cantilever.LOGGER.info("EXISTING WEBHOOK FOUND");
+					Webhook existingWebhook = webhooks.stream().filter(hook -> {
+							if (hook.getName().isPresent()) {
+								return hook.getName().get().equals("Cantilever Bridge Webhook %s".formatted(bridgeChannelId));
+							}
+							return false;
+						})
+						.findAny().orElse(null);
+
+					if (existingWebhook != null) {
+						Cantilever.LOGGER.info("Successfully found existing webhook for channel {}", bridgeChannelId);
+						this.bridgeChannelWebhook = existingWebhook.asIncomingWebhook().orElseThrow(() -> new IllegalStateException("Failed to bind existing webhook %s for channel %s".formatted(existingWebhook.getName(), bridgeChannelId)));
+						return;
 					}
+
 					new WebhookBuilder(
 						this.bridgeChannel.asTextableRegularServerChannel().orElseThrow(
 							() -> new IllegalStateException("Failed to create webhook for channel %s".formatted(bridgeChannelId))

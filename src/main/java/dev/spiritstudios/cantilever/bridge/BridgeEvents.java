@@ -22,22 +22,20 @@ public class BridgeEvents {
 	private static void registerMinecraftEvents() {
 		ServerLifecycleEvents.SERVER_STARTING.register(
 			Identifier.of(Cantilever.MODID, "after_bridge"),
-			server -> {
-				BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server starting..."));
-			}
+			server -> BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server starting..."))
 		);
 
-		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
-			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server started"));
-		});
+		ServerLifecycleEvents.SERVER_STARTED.register(server ->
+			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server started"))
+		);
 
-		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
-			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopping..."));
-		});
+		ServerLifecycleEvents.SERVER_STOPPING.register(server ->
+			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopping..."))
+		);
 
-		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopped"));
-		});
+		ServerLifecycleEvents.SERVER_STOPPED.register(server ->
+			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopped"))
+		);
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
 			if (message.getContent() instanceof BridgeTextContent content && content.bot()) {
@@ -50,20 +48,21 @@ public class BridgeEvents {
 
 	private static void registerDiscordEvents() {
 		BridgeEvents.bridge.api().addMessageCreateListener(event -> {
-			if (BridgeEvents.bridge.channel().map(c -> c == event.getChannel()).orElse(false) && !event.getMessageAuthor().isYourself()) {
-				if (BridgeEvents.bridge.getWebhookId() != event.getMessageAuthor().getId()) {
-					BridgeEvents.bridge.sendBasicMessageD2M(
-						new BridgeTextContent(
-							markdownParser.parseText(
-								CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
-									event.getMessageAuthor().getName(), event.getMessageContent()
-								),
-								PlaceholderContext.of(bridge.server).asParserContext()
+			if (BridgeEvents.bridge.channel().map(c -> c == event.getChannel()).orElse(false) &&
+				!event.getMessageAuthor().isYourself() &&
+				BridgeEvents.bridge.getWebhookId() != event.getMessageAuthor().getId()) {
+				BridgeEvents.bridge.sendBasicMessageD2M(
+					new BridgeTextContent(
+						markdownParser.parseText(
+							CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
+								event.getMessageAuthor().getName(), event.getMessageContent()
 							),
-							true
-						)
-					);
-				}
+							PlaceholderContext.of(bridge.server).asParserContext()
+						),
+						true
+					)
+				);
+
 			}
 		});
 	}
