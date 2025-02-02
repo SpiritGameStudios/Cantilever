@@ -12,10 +12,10 @@ class ModInfo {
 
 val mod = ModInfo()
 
-version = mod.version
+version = "${mod.version}+${libs.versions.minecraft.get()}"
 group = mod.group
 
-base.archivesName = "${mod.id}-${mod.version}"
+base.archivesName = mod.id
 
 loom {
 	splitEnvironmentSourceSets()
@@ -29,7 +29,6 @@ loom {
 repositories {
 	mavenCentral()
 	maven("https://maven.spiritstudios.dev/releases/")
-	maven("https://maven.nucleoid.xyz/") { name = "Nucleoid" }
 }
 
 dependencies {
@@ -42,6 +41,7 @@ dependencies {
 	include(libs.bundles.specter)
 	modImplementation(libs.bundles.specter)
 
+	include(libs.javacord)
 	implementation(libs.javacord)
 }
 
@@ -69,7 +69,9 @@ tasks.withType<JavaCompile> {
 	options.release = 21
 }
 
-tasks.jar { from("LICENSE") { rename { "${it}_${base.archivesName}" } } }
+tasks.jar {
+	from("LICENSE") { rename { "${it}_${base.archivesName.get()}" } }
+}
 
 modrinth {
 	token.set(System.getenv("MODRINTH_TOKEN"))
