@@ -60,7 +60,6 @@ tasks.processResources {
 
 tasks.shadowJar {
 	tasks.shadowJar.get().configurations.set(arrayListOf(project.configurations.shadow.get()))
-	relocate("org.javacord", "dev.spiritstudios.deps.javacord")
 }
 
 tasks.remapJar {
