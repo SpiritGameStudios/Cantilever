@@ -2,6 +2,7 @@ plugins {
 	java
 	alias(libs.plugins.fabric.loom)
 	alias(libs.plugins.minotaur)
+	alias(libs.plugins.shadow)
 }
 
 class ModInfo {
@@ -41,8 +42,8 @@ dependencies {
 	include(libs.bundles.specter)
 	modImplementation(libs.bundles.specter)
 
-	include(libs.javacord)
 	implementation(libs.javacord)
+	shadow(libs.javacord)
 }
 
 tasks.processResources {
@@ -55,6 +56,18 @@ tasks.processResources {
 
 	inputs.properties(map)
 	filesMatching("fabric.mod.json") { expand(map) }
+}
+
+tasks.shadowJar {
+	tasks.shadowJar.get().configurations.set(arrayListOf(project.configurations.shadow.get()))
+	relocate("org.javacord", "dev.spiritstudios.deps.javacord")
+}
+
+tasks.remapJar {
+	dependsOn(tasks.shadowJar)
+	mustRunAfter(tasks.shadowJar)
+
+	inputFile.set(tasks.shadowJar.get().archiveFile)
 }
 
 java {
