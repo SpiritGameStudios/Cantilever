@@ -24,4 +24,6 @@ public class CantileverConfig extends Config<CantileverConfig> {
 	public final Value<String> webhookFaceApi = stringValue("https://vzge.me/face/256/%s.png")
 		.comment("Use a %s slot to set the player UUID for your head service of choice!")
 		.build();
+	public final Value<String> statusMessage = stringValue("")
+		.build();
 }
