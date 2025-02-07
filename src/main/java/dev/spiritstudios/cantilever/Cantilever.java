@@ -30,8 +30,6 @@ public class Cantilever implements ModInitializer {
 			Identifier.of(MODID, "before_bridge"),
 			Identifier.of(MODID, "after_bridge")
 		);
-
-
 	}
 
 	public static Bridge bridge() {

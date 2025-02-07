@@ -44,7 +44,7 @@ public class Bridge {
 				this.api = api;
 				Cantilever.LOGGER.trace("Connected to Discord");
 
-				this.api.updateActivity(ActivityType.CUSTOM, CantileverConfig.INSTANCE.statusMessage.get());
+				this.api.updateActivity(CantileverConfig.INSTANCE.activityType.get(), CantileverConfig.INSTANCE.statusMessage.get());
 
 				long bridgeChannelId = CantileverConfig.INSTANCE.channelId.get();
 
