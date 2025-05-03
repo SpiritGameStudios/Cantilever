@@ -1,33 +1,31 @@
 package dev.spiritstudios.cantilever.bridge;
 
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.external.JDAWebhookClient;
+import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
-import dev.spiritstudios.specter.api.core.exception.UnreachableException;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Webhook;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
-import org.javacord.api.DiscordApi;
-import org.javacord.api.DiscordApiBuilder;
-import org.javacord.api.entity.activity.ActivityType;
-import org.javacord.api.entity.channel.TextChannel;
-import org.javacord.api.entity.intent.Intent;
-import org.javacord.api.entity.message.MessageBuilder;
-import org.javacord.api.entity.message.WebhookMessageBuilder;
-import org.javacord.api.entity.webhook.IncomingWebhook;
-import org.javacord.api.entity.webhook.Webhook;
-import org.javacord.api.entity.webhook.WebhookBuilder;
+import org.jetbrains.annotations.NotNull;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.Objects;
 import java.util.Optional;
 
 public class Bridge {
-	private DiscordApi api;
+	private final JDA api;
 	private TextChannel bridgeChannel;
-	private IncomingWebhook bridgeChannelWebhook;
+	private WebhookClient bridgeChannelWebhook;
 	public final MinecraftServer server;
 
 	public Bridge(MinecraftServer server) {
@@ -36,100 +34,81 @@ public class Bridge {
 		if (Objects.equals(CantileverConfig.INSTANCE.token.get(), CantileverConfig.INSTANCE.token.defaultValue()))
 			throw new IllegalStateException("You forgot to set your bot token in the config file! Please create a discord bot application and add it's token to the config file.");
 
-		new DiscordApiBuilder()
-			.setToken(CantileverConfig.INSTANCE.token.get())
-			.addIntents(Intent.GUILD_MESSAGES, Intent.MESSAGE_CONTENT)
-			.login()
-			.thenAccept(api -> {
-				this.api = api;
-				Cantilever.LOGGER.trace("Connected to Discord");
+		api = JDABuilder
+			.createLight(
+				CantileverConfig.INSTANCE.token.get(),
+				GatewayIntent.GUILD_MESSAGES,
+				GatewayIntent.MESSAGE_CONTENT
+			)
+			.setActivity(CantileverConfig.INSTANCE.statusMessage.get().isEmpty() ?
+				null :
+				Activity.of(CantileverConfig.INSTANCE.activityType.get(), CantileverConfig.INSTANCE.statusMessage.get()))
+			.addEventListeners(new ListenerAdapter() {
+				@Override
+				public void onReady(@NotNull ReadyEvent event) {
+					ready();
+				}
+			})
+			.build();
+	}
 
-				this.api.updateActivity(CantileverConfig.INSTANCE.activityType.get(), CantileverConfig.INSTANCE.statusMessage.get());
+	private void ready() {
+		Cantilever.LOGGER.trace("Connected to Discord");
 
-				long bridgeChannelId = CantileverConfig.INSTANCE.channelId.get();
+		long bridgeChannelId = CantileverConfig.INSTANCE.channelId.get();
 
-				this.bridgeChannel = this.api
-					.getChannelById(bridgeChannelId)
-					.orElseThrow(() ->
-						new IllegalStateException("Channel with id %s could not be found".formatted(bridgeChannelId)))
-					.asTextChannel()
-					.orElseThrow(() ->
-						new IllegalStateException("Channel with id %s is not a text channel".formatted(bridgeChannelId)));
+		bridgeChannel = api.getChannelById(TextChannel.class, bridgeChannelId);
+		if (bridgeChannel == null)
+			throw new IllegalStateException("Channel with id %s could not be found".formatted(bridgeChannelId));
 
-				Cantilever.LOGGER.info(
-					"Cantilever connected to channel \"{}\"",
-					bridgeChannel.asServerChannel()
-						.orElseThrow(UnreachableException::new)
-						.getName()
-				);
+		Cantilever.LOGGER.info(
+			"Cantilever connected to channel \"{}\"",
+			bridgeChannel.getName()
+		);
 
-				this.bridgeChannel.getWebhooks().thenAccept(webhooks -> {
-					Webhook existingWebhook = webhooks.stream().filter(hook -> {
-							if (hook.getName().isPresent()) {
-								return hook.getName().get().equals("Cantilever Bridge Webhook %s".formatted(bridgeChannelId));
-							}
-							return false;
-						})
-						.findAny().orElse(null);
+		bridgeChannel.retrieveWebhooks().queue(webhooks -> {
+			Webhook existingWebhook = webhooks.stream().filter(hook -> hook.getName()
+				.equals("Cantilever Bridge Webhook %s".formatted(bridgeChannelId))).findAny().orElse(null);
 
-					if (existingWebhook != null) {
-						Cantilever.LOGGER.info("Successfully found existing webhook for channel {}", bridgeChannelId);
-						this.bridgeChannelWebhook = existingWebhook.asIncomingWebhook().orElseThrow(() -> new IllegalStateException("Failed to bind existing webhook %s for channel %s".formatted(existingWebhook.getName(), bridgeChannelId)));
-						return;
-					}
+			if (existingWebhook != null) {
+				Cantilever.LOGGER.info("Successfully found existing webhook for channel {}", bridgeChannelId);
+				bridgeChannelWebhook = JDAWebhookClient.from(existingWebhook);
+				return;
+			}
 
-					new WebhookBuilder(
-						this.bridgeChannel.asTextableRegularServerChannel().orElseThrow(
-							() -> new IllegalStateException("Failed to create webhook for channel %s".formatted(bridgeChannelId))
-						)
-					)
-						.setName("Cantilever Bridge Webhook %s".formatted(bridgeChannelId))
-						.create().thenAccept(
-							incomingWebhook -> bridgeChannelWebhook = incomingWebhook
-						).exceptionally(error -> {
-							Cantilever.LOGGER.error("Failed to create webhook in channel {}", bridgeChannelId, error);
-							return null;
-						});
-				});
+			bridgeChannel.createWebhook("Cantilever Bridge Webhook " + bridgeChannelId)
+				.onSuccess(webhook -> bridgeChannelWebhook = JDAWebhookClient.from(webhook))
+				.queue();
+		});
 
-				BridgeEvents.init(this);
-			});
+		BridgeEvents.init(this);
 	}
 
 	public void sendBasicMessageM2D(String message) {
-		MessageBuilder msg = new MessageBuilder()
-			.append(message);
-		msg.send(Cantilever.bridge().bridgeChannel);
+		bridgeChannel.sendMessage(message).queue();
 	}
 
 	public void sendWebhookMessageM2D(SignedMessage message, ServerPlayerEntity sender) {
-		URL avatarUrl;
-		try {
-			avatarUrl = URI.create(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString())).toURL();
-		} catch (MalformedURLException e) {
-			sendBasicMessageM2D(message.getContent().getString());
-			return;
-		}
-
 		if (this.bridgeChannelWebhook == null) {
 			sendBasicMessageM2D(message.getContent().getString());
 			Cantilever.LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
 			return;
 		}
 
-		WebhookMessageBuilder msg = new WebhookMessageBuilder()
-			.setDisplayName(sender.getName().getString())
-			.setDisplayAvatar(avatarUrl)
-			.append(message.getContent().getString());
-
-		this.bridgeChannelWebhook.getLatestInstanceAsIncomingWebhook().thenAccept(msg::send);
+		this.bridgeChannelWebhook.send(
+			new WebhookMessageBuilder()
+				.setUsername(sender.getName().getString())
+				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString()))
+				.append(message.getContent().getString())
+				.build()
+		);
 	}
 
 	public void sendBasicMessageD2M(BridgeTextContent textContent) {
 		this.server.getPlayerManager().broadcast(MutableText.of(textContent), false);
 	}
 
-	public DiscordApi api() {
+	public JDA api() {
 		return this.api;
 	}
 

@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import dev.spiritstudios.specter.api.config.Config;
 import dev.spiritstudios.specter.api.config.ConfigHolder;
 import dev.spiritstudios.specter.api.config.Value;
-import org.javacord.api.entity.activity.ActivityType;
+import net.dv8tion.jda.api.entities.Activity;
 
 public class CantileverConfig extends Config<CantileverConfig> {
 	public static final ConfigHolder<CantileverConfig, ?> HOLDER = ConfigHolder.builder(Cantilever.id(Cantilever.MODID), CantileverConfig.class)
@@ -33,7 +33,7 @@ public class CantileverConfig extends Config<CantileverConfig> {
 	public final Value<String> statusMessage = stringValue("")
 		.build();
 
-	public final Value<ActivityType> activityType = enumValue(ActivityType.PLAYING, ActivityType.class)
+	public final Value<Activity.ActivityType> activityType = enumValue(Activity.ActivityType.PLAYING, Activity.ActivityType.class)
 		.comment("Options: [playing, streaming, listening, watching, competing]")
 		.build();
 }

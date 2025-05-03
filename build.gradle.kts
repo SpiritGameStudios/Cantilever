@@ -42,8 +42,11 @@ dependencies {
 	include(libs.bundles.specter)
 	modImplementation(libs.bundles.specter)
 
-	implementation(libs.javacord)
-	shadow(libs.javacord)
+	implementation(libs.jda) { exclude(module = "opus-java") }
+	shadow(libs.jda) { exclude(module = "opus-java") }
+
+	implementation(libs.discordwebhooks)
+	shadow(libs.discordwebhooks)
 }
 
 tasks.processResources {
