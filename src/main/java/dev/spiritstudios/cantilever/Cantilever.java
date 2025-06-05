@@ -29,7 +29,9 @@ public class Cantilever implements ModInitializer {
 
 		ServerLifecycleEvents.SERVER_STOPPED.register(
 			id("after_shutdown"),
-			server -> bridge().api().shutdown()
+			server -> {
+				bridge().api().shutdownNow();
+			}
 		);
 
 		ServerLifecycleEvents.SERVER_STARTING.addPhaseOrdering(
