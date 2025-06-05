@@ -20,7 +20,7 @@ public class Cantilever implements ModInitializer {
 		TextContentRegistry.register("bot", BridgeTextContent.TYPE);
 
 		ServerLifecycleEvents.SERVER_STARTING.register(
-			id("before_shutdown"),
+			id("before_bridge"),
 			server -> {
 				LOGGER.info("Initialising Cantilever...");
 				bridge = new Bridge(server);
