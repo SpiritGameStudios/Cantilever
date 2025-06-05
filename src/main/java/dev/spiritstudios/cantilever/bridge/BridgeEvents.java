@@ -34,8 +34,9 @@ public class BridgeEvents {
 			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopping..."))
 		);
 
-		ServerLifecycleEvents.SERVER_STOPPED.register(server ->
-			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopped"))
+		ServerLifecycleEvents.SERVER_STOPPED.register(
+			Identifier.of(Cantilever.MODID, "before_shutdown"),
+			server -> BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopped"))
 		);
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
