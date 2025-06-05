@@ -30,6 +30,10 @@ public class CantileverConfig extends Config<CantileverConfig> {
 		.comment("Use a %s slot to set the player UUID for your head service of choice!")
 		.build();
 
+	public final Value<Long> discordMessageDelay = value(400L, Codec.LONG)
+		.comment("The delay for sending a message from Discord to Minecraft. Set up to make sure that Webhook related Discord Bots such as PluralKit and Tupperbox may send messages from users.")
+		.build();
+
 	public final Value<String> statusMessage = stringValue("")
 		.build();
 

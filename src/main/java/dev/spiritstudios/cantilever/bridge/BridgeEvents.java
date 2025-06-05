@@ -8,6 +8,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import org.jetbrains.annotations.NotNull;
 
 public class BridgeEvents {
@@ -56,16 +57,31 @@ public class BridgeEvents {
 			@Override
 			public void onMessageReceived(@NotNull MessageReceivedEvent event) {
 				if (!BridgeEvents.bridge.channel().map(c -> c == event.getChannel()).orElse(false) ||
-					event.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong()) {
+					event.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong() || event.getAuthor().getIdLong() == BridgeEvents.bridge.getWebhookId()) {
 					return;
 				}
 
-				BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(
-					Text.of(CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
-						event.getAuthor().getName(), event.getMessage().getContentDisplay()
-					)),
-					true
-				));
+				Util.getIoWorkerExecutor().execute(() -> {
+					try {
+						// Catch all to make sure that PluralKit, Tupperbox and other webhook utilizing bots'
+						// original message does not get caught and sent.
+						Thread.sleep(CantileverConfig.INSTANCE.discordMessageDelay.get());
+
+						var messageHistory = event.getChannel().asTextChannel().getHistoryAround(event.getMessageIdLong(),4).complete();
+						if (messageHistory.getMessageById(event.getMessageIdLong()) == null) {
+							return;
+						}
+
+						BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(
+							Text.of(CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
+								event.getAuthor().getName(), event.getMessage().getContentDisplay()
+							)),
+							true
+						));
+					} catch (InterruptedException e) {
+						throw new RuntimeException(e);
+					}
+				});
 			}
 		});
 	}
