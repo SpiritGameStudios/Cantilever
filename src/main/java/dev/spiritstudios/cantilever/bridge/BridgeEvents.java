@@ -56,7 +56,7 @@ public class BridgeEvents {
 			@Override
 			public void onMessageReceived(@NotNull MessageReceivedEvent event) {
 				if (!BridgeEvents.bridge.channel().map(c -> c == event.getChannel()).orElse(false) ||
-					event.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong()) {
+					event.getAuthor().getIdLong() == event.getJDA().getSelfUser().getIdLong() || event.getAuthor().getIdLong() == BridgeEvents.bridge.getWebhookId()) {
 					return;
 				}
 
