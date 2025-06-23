@@ -94,10 +94,11 @@ public class Bridge {
 			Cantilever.LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
 			return;
 		}
+		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.get() && sender.getDisplayName() != null ? sender.getDisplayName().getString() : sender.getName().getString();
 
 		this.bridgeChannelWebhook.send(
 			new WebhookMessageBuilder()
-				.setUsername(sender.getName().getString())
+				.setUsername(username)
 				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString()))
 				.append(message.getContent().getString())
 				.build()

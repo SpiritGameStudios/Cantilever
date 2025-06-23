@@ -52,6 +52,10 @@ public class CantileverConfig extends Config<CantileverConfig> {
 		.comment("Options: [playing, streaming, listening, watching, competing]")
 		.build();
 
+	public final Value<Boolean> useMinecraftNicknames = booleanValue(true)
+		.comment("Whether to use nicknames defined by players or Minecraft account name on Discord")
+		.build();
+
 	public record WebhooksForRemoval(List<Long> webhookIds, boolean inverted) {
 		public static final WebhooksForRemoval DEFAULT = new WebhooksForRemoval(List.of(), true);
 		public static final Codec<WebhooksForRemoval> CODEC = RecordCodecBuilder.create(inst -> inst.group(
