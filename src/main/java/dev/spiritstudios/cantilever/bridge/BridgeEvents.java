@@ -11,8 +11,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class BridgeEvents {
@@ -72,7 +72,7 @@ public class BridgeEvents {
 
 				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
 				if (scheduler == null && CantileverConfig.INSTANCE.d2mMessageDelay.get() > 0 && (!webhooksForRemoval.webhookIds().isEmpty() || webhooksForRemoval.inverted())) {
-					scheduler = new ScheduledThreadPoolExecutor(1, runnable -> {
+					scheduler = Executors.newScheduledThreadPool(1, runnable -> {
 						var thread = new Thread(runnable, "Cantilever D2M Message Scheduler");
 						thread.setDaemon(true);
 						return thread;
@@ -112,8 +112,12 @@ public class BridgeEvents {
 				}
 
 				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
-				return webhooksForRemoval.webhookIds().stream()
-					.anyMatch(s -> s == message.getAuthor().getIdLong() ^ webhooksForRemoval.inverted());
+				for (long webhookId : webhooksForRemoval.webhookIds()) {
+					if (webhookId == message.getAuthor().getIdLong()) {
+						return !webhooksForRemoval.inverted();
+					}
+				}
+				return webhooksForRemoval.inverted();
 			}
 		});
 	}
