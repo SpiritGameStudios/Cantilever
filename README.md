@@ -12,6 +12,12 @@ No-nonsense Minecraft ↔ Discord bridge
 
 Inspired by the many other bridge mod options between Minecraft and Discord, Cantilever strives to provide a simple, no-fuss option for everyone to enjoy.
 
+## 🔨 Setup
+
+Setup instructions can be found on our [documentation site](https://docs.spiritstudios.dev), at https://docs.spiritstudios.dev/use/cantilever.
+
+Feel free to join our [discord](https://discord.gg/TTmx7d2axf) if you have any questions!
+
 ## ❓ FAQ
 * Forge? <br/>
   No. Please do not ask us for a forge port.
