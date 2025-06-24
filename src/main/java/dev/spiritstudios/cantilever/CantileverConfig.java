@@ -1,6 +1,7 @@
 package dev.spiritstudios.cantilever;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.spiritstudios.specter.api.config.Config;
 import dev.spiritstudios.specter.api.config.ConfigHolder;
@@ -25,7 +26,7 @@ public class CantileverConfig extends Config<CantileverConfig> {
 		.comment("Use %s in your value to slot in the game event text being sent.")
 		.build();
 
-	public final Value<String> gameChatFormat = stringValue("<@%s> %s")
+	public final Value<String> gameChatFormat = stringValue("<%s> %s")
 		.comment("Use a first %s in your value to slot in a username, and a second to slot in the chat message content.")
 		.build();
 

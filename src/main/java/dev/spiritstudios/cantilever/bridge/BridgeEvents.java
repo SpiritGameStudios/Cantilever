@@ -11,8 +11,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class BridgeEvents {
@@ -46,13 +46,14 @@ public class BridgeEvents {
 		);
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
-			if (message.getContent() instanceof BridgeTextContent content && content.bot()) return;
+			if (message.getContent() instanceof BridgeTextContent) return;
 			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted(message.getString()));
 		});
 
 		ServerMessageEvents.COMMAND_MESSAGE.register((message, source, parameters) -> {
-			if (message.getContent().getContent() instanceof BridgeTextContent content && content.bot()) return;
-			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted(message.getContent().getString()));
+			if (message.getContent().getContent() instanceof BridgeTextContent) return;
+			// TODO: Apply decorations to Minecraft messages.
+			BridgeEvents.bridge.sendBasicMessageM2D(parameters.applyChatDecoration(message.getContent()).getString());
 		});
 
 		ServerMessageEvents.CHAT_MESSAGE.register((message, user, params) -> BridgeEvents.bridge.sendWebhookMessageM2D(message, user));
@@ -71,10 +72,9 @@ public class BridgeEvents {
 
 				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
 				if (scheduler == null && CantileverConfig.INSTANCE.d2mMessageDelay.get() > 0 && (!webhooksForRemoval.webhookIds().isEmpty() || webhooksForRemoval.inverted())) {
-					scheduler = Executors.newScheduledThreadPool(1, runnable -> {
+					scheduler = new ScheduledThreadPoolExecutor(1, runnable -> {
 						var thread = new Thread(runnable, "Cantilever D2M Message Scheduler");
 						thread.setDaemon(true);
-						thread.setUncaughtExceptionHandler((thread1, throwable) -> Cantilever.LOGGER.error("Caught exception in D2M Message Scheduler", throwable));
 						return thread;
 					});
 				}
@@ -82,28 +82,27 @@ public class BridgeEvents {
 				if (scheduler != null) {
 					var historyFuture = event.getChannel().asGuildMessageChannel().getHistoryAfter(event.getMessageIdLong(), CantileverConfig.INSTANCE.webhookMessagesToCheck.get());
 					scheduler.schedule(() -> {
-						var history = historyFuture.complete();
-						if (!history.isEmpty() && !event.isWebhookMessage() && history.getRetrievedHistory().stream()
-							.noneMatch(message -> isMessageWebhook(message, event.getMessage()))) {
-							return;
-						}
+						try {
+							var history = historyFuture.complete();
+							if (!history.isEmpty() && !event.isWebhookMessage() && history.getRetrievedHistory().stream()
+								.noneMatch(message -> isMessageWebhook(message, event.getMessage()))) {
+								return;
+							}
 
-						BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(
-							Text.of(CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
-								event.getAuthor().getName(), event.getMessage().getContentDisplay()
-							)),
-							true
-						));
+							for (Text text : BridgeFormatter.formatDiscordText(event)) {
+								BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(text));
+							}
+						} catch (Exception ex) {
+							Cantilever.LOGGER.error("Caught exception in D2M Message Scheduler", ex);
+						}
 					}, CantileverConfig.INSTANCE.d2mMessageDelay.get(), TimeUnit.MILLISECONDS);
 					return;
 				}
 
-				BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(
-					Text.of(CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
-						event.getAuthor().getName(), event.getMessage().getContentDisplay()
-					)),
-					true
-				));
+
+				for (Text text : BridgeFormatter.formatDiscordText(event)) {
+					BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(text));
+				}
 			}
 
 			private static boolean isMessageWebhook(Message message, Message originalMessage) {
