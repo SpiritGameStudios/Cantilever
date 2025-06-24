@@ -84,7 +84,7 @@ public class BridgeEvents {
 					scheduler.schedule(() -> {
 						var history = historyFuture.complete();
 						if (!history.isEmpty() && !event.isWebhookMessage() && history.getRetrievedHistory().stream()
-							.noneMatch(message -> isMessageWebhook(message, event.getMessage()))) {
+							.anyMatch(message -> isMessageWebhook(message, event.getMessage()))) {
 							return;
 						}
 
@@ -113,8 +113,12 @@ public class BridgeEvents {
 				}
 
 				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
-				return webhooksForRemoval.webhookIds().stream()
-					.anyMatch(s -> s == message.getAuthor().getIdLong() ^ webhooksForRemoval.inverted());
+				for (long webhookId : webhooksForRemoval.webhookIds()) {
+					if (webhookId == message.getAuthor().getIdLong()) {
+						return !webhooksForRemoval.inverted();
+					}
+				}
+				return webhooksForRemoval.inverted();
 			}
 		});
 	}
