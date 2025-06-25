@@ -88,6 +88,10 @@ public class Bridge {
 		bridgeChannel.sendMessage(message).queue();
 	}
 
+	public void sendShutdownMessageM2D(String message) {
+		bridgeChannel.sendMessage(message).complete();
+	}
+
 	public void sendWebhookMessageM2D(SignedMessage message, ServerPlayerEntity sender) {
 		if (this.bridgeChannelWebhook == null) {
 			sendBasicMessageM2D(message.getContent().getString());
