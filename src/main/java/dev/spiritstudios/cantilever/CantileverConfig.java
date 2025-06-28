@@ -26,7 +26,7 @@ public class CantileverConfig extends Config<CantileverConfig> {
 		.comment("Use %s in your value to slot in the game event text being sent.")
 		.build();
 
-	public final Value<String> gameChatFormat = stringValue("<%s> %s")
+	public final Value<String> gameChatFormat = stringValue("<@%s> %s")
 		.comment("Use a first %s in your value to slot in a username, and a second to slot in the chat message content.")
 		.build();
 
