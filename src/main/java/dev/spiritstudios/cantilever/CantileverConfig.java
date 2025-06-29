@@ -22,6 +22,10 @@ public class CantileverConfig extends Config<CantileverConfig> {
 		.comment("You can get this value by enabling developer mode in discord and right clicking the channel you wish to use as your bridge.")
 		.build();
 
+	public final Value<String> replyFormat = stringValue("Reply to: %s")
+		.comment("Use %s in your value to slot in the message that is being replied to.")
+		.build();
+
 	public final Value<String> gameEventFormat = stringValue("**%s**")
 		.comment("Use %s in your value to slot in the game event text being sent.")
 		.build();

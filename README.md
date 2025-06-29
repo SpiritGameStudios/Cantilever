@@ -27,3 +27,7 @@ Feel free to join our [discord](https://discord.gg/TTmx7d2axf) if you have any q
 
 * Can you port/backport to `X` version? <br/>
   Probably not. Multi-version projects are hard :(
+
+## 📖 Credits
+* [Simple Markdown](https://github.com/ariabuckles/simple-markdown/) and [Discord Markdown Parser](https://github.com/ItzDerock/discord-markdown-parser/)
+	* Used as a reference for Discord's Markdown functionality.
