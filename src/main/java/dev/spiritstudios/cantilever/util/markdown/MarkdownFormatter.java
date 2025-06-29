@@ -105,10 +105,15 @@ public class MarkdownFormatter {
 				texts.add(Text.empty());
 				state.newLine = false;
 			}
-			texts.getLast().append(parsed);
+			if (!parsed.getString().isBlank()) {
+				texts.getLast().append(parsed);
+			}
+
+			state.previousCapture = capture;
+			source = source.substring(state.previousCapture[0].length());
 
 			Style original = parsed.getStyle();
-			if (shouldReset(original)) {
+			if (!source.isEmpty() && shouldReset(original)) {
 				Style style = Style.EMPTY;
 				style = original.isBold() ? style.withBold(false) : style;
 				style = original.getColor() != null ? style.withColor(Formatting.WHITE) : style;
@@ -118,10 +123,6 @@ public class MarkdownFormatter {
 				style = original.isUnderlined() ? style.withUnderline(false) : style;
 				texts.getLast().append(Text.literal("").setStyle(style));
 			}
-
-
-			state.previousCapture = capture;
-			source = source.substring(state.previousCapture[0].length());
 		}
 		return texts;
 	}
