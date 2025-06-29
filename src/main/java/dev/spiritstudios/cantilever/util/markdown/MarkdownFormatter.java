@@ -48,7 +48,11 @@ public class MarkdownFormatter {
 			return nestedParser(capture, state);
 		};
 
-		return outerParse.parse(discordContent, new State()).stream()
+		var texts = outerParse.parse(discordContent, new State());
+		if (defaultState.oneLine) {
+			texts = reduceToOneLine(texts);
+		}
+		return texts.stream()
 			.map(mutableText -> BridgeFormatter.prefixAndSuffixText(defaultState.prefix, defaultState.suffix, mutableText))
 			.toList();
 	}
@@ -141,7 +145,7 @@ public class MarkdownFormatter {
 		return matcher.results().map(matchResult -> matcher.group()).toArray(String[]::new);
 	}
 
-	private static Text reduceToOneLine(List<Text> texts) {
+	private static List<MutableText> reduceToOneLine(List<MutableText> texts) {
 		MutableText text = Text.empty();
 		for (Text line : texts) {
 			if (!text.getSiblings().isEmpty()) {
@@ -149,7 +153,7 @@ public class MarkdownFormatter {
 			}
 			text.append(line);
 		}
-		return text;
+		return List.of(text);
 	}
 
 	public interface Parser {
