@@ -13,6 +13,7 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -38,8 +39,10 @@ public class Bridge {
 			.createLight(
 				CantileverConfig.INSTANCE.token.get(),
 				GatewayIntent.GUILD_MESSAGES,
+				GatewayIntent.GUILD_MEMBERS,
 				GatewayIntent.MESSAGE_CONTENT
 			)
+			.setMemberCachePolicy(MemberCachePolicy.ALL) // Used for getting member from original replies.
 			.setActivity(CantileverConfig.INSTANCE.statusMessage.get().isEmpty() ?
 				null :
 				Activity.of(CantileverConfig.INSTANCE.activityType.get(), CantileverConfig.INSTANCE.statusMessage.get()))

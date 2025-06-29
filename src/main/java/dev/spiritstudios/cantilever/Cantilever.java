@@ -2,8 +2,6 @@ package dev.spiritstudios.cantilever;
 
 import dev.spiritstudios.cantilever.bridge.Bridge;
 import dev.spiritstudios.cantilever.bridge.BridgeTextContent;
-import dev.spiritstudios.cantilever.util.markdown.MarkdownFormatter;
-import dev.spiritstudios.cantilever.util.markdown.MarkdownRules;
 import dev.spiritstudios.specter.api.serialization.text.TextContentRegistry;
 import net.dv8tion.jda.api.entities.Activity;
 import net.fabricmc.api.ModInitializer;
@@ -25,7 +23,6 @@ public class Cantilever implements ModInitializer {
 			id("before_bridge"),
 			server -> {
 				LOGGER.info("Initialising Cantilever...");
-				MarkdownRules.init();
 				bridge = new Bridge(server);
 			}
 		);

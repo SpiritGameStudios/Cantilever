@@ -1,11 +1,14 @@
 package dev.spiritstudios.cantilever.bridge;
 
 import dev.spiritstudios.cantilever.CantileverConfig;
-import dev.spiritstudios.cantilever.util.markdown.MarkdownFormatter;
+import dev.spiritstudios.cantilever.markdown.TextComponentRenderer;
+import dev.spiritstudios.cantilever.markdown.nodes.DiscordLinkProcessor;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
@@ -17,32 +20,23 @@ public class BridgeFormatter {
 		String authorName = event.getMember() != null ?
 			event.getMember().getEffectiveName() : event.getAuthor().getEffectiveName();
 
-		MarkdownFormatter.State state = new MarkdownFormatter.State();
 		Text prefix = getMinecraftPrefix(authorName, extractColor(event.getMember()));
 		Text suffix = getMinecraftSuffix();
 
 		List<Text> text = new ArrayList<>();
-		MessageReference potentialReplyTo = event.getMessage().getMessageReference();
-		if (potentialReplyTo != null && event.getMessage().getType() == MessageType.INLINE_REPLY && potentialReplyTo.getMessage() != null) {
-			Member replyToMember = event.getGuild().getMemberById(event.getMessage().getAuthor().getId());
-			String replyToAuthorName = replyToMember != null ?
-				replyToMember.getEffectiveName() : potentialReplyTo.getMessage().getAuthor().getEffectiveName();
-			state.prefix = Text.literal(CantileverConfig.INSTANCE.replyFormat.get().formatted(getMinecraftPrefix(replyToAuthorName, extractColor(replyToMember)).getString()));
-			state.suffix = suffix;
-			state.oneLine = true;
-			text.addAll(MarkdownFormatter.formatDiscordMarkdown(
-					potentialReplyTo.getMessage().getContentRaw(),
-					state
-				)
-			);
+		MessageReference replyTo = event.getMessage().getMessageReference();
+		if (replyTo != null && event.getMessage().getType() == MessageType.INLINE_REPLY && replyTo.getMessage() != null) {
+			String replyToAuthorName = replyTo.getMessage().getMember() != null ?
+				replyTo.getMessage().getMember().getEffectiveName() : replyTo.getMessage().getAuthor().getEffectiveName();
+			text.addAll(formatDiscordMarkdown(
+				replyTo.getMessage().getContentRaw(),
+				createReplyPrefix(replyToAuthorName, extractColor(replyTo.getMessage().getMember())), suffix, true));
 		}
 
 		Message message = event.getMessage();
-		state = new MarkdownFormatter.State();
-		state.prefix = prefix;
-		state.suffix = suffix;
-		state.oneLine = false; // TODO: One line config.
-		text.addAll(MarkdownFormatter.formatDiscordMarkdown(message.getContentRaw(), state));
+		text.addAll(formatDiscordMarkdown(
+			message.getContentRaw(),
+			prefix, suffix, false));
 
 		for (Message.Attachment attachment : message.getAttachments()) {
 			String url = attachment.getUrl();
@@ -57,12 +51,20 @@ public class BridgeFormatter {
 		return text;
 	}
 
-	@Nullable
-	private static TextColor extractColor(@Nullable Member member) {
-		if (member == null)
-			return null;
-		var role = member.getRoles().stream().filter(role1 -> role1.getColorRaw() != 0x1FFFFFFF).max(Comparator.comparingInt(Role::getPosition));
-		return role.map(value -> TextColor.fromRgb(value.getColorRaw())).orElse(null);
+	public static List<Text> formatDiscordMarkdown(String discordContent, Text prefix, Text suffix, boolean singleLine) {
+		if (discordContent.isBlank())
+			return Collections.emptyList();
+
+		Parser parser = Parser.builder()
+			.linkProcessor(DiscordLinkProcessor.INSTANCE)
+			.build();
+		Node node = parser.parse(discordContent);
+		var renderer = new TextComponentRenderer.Builder()
+			.stripNewLines(singleLine)
+			.build();
+		return renderer.render(node).stream()
+			.map(mutableText -> prefixAndSuffixText(prefix, suffix, mutableText))
+			.toList();
 	}
 
 	public static Text prefixAndSuffixText(Text prefix, Text suffix, Text content) {
@@ -76,13 +78,32 @@ public class BridgeFormatter {
 		return returnText;
 	}
 
-	private static Text getMinecraftPrefix(String discordAuthor, TextColor roleColor) {
+	private static List<MutableText> reduceToOneLine(List<MutableText> texts) {
+		MutableText text = Text.empty();
+		for (Text line : texts) {
+			if (!text.getSiblings().isEmpty()) {
+				text.append(" ");
+			}
+			text.append(line);
+		}
+		return List.of(text);
+	}
+
+	@Nullable
+	private static TextColor extractColor(@Nullable Member member) {
+		if (member == null)
+			return null;
+		var role = member.getRoles().stream().filter(role1 -> role1.getColorRaw() != 0x1FFFFFFF).max(Comparator.comparingInt(Role::getPosition));
+		return role.map(value -> TextColor.fromRgb(value.getColorRaw())).orElse(null);
+	}
+
+	private static Text getMinecraftPrefix(String authorName, TextColor roleColor) {
 		String[] split = CantileverConfig.INSTANCE.gameChatFormat.get().split("%s");
 		if (split.length < 2)
 			return Text.empty();
-		Text authorWithColor = Text.literal(discordAuthor).setStyle(roleColor == null ? Style.EMPTY : Style.EMPTY.withColor(roleColor));
-		return Text.empty()
-			.append(split[0])
+		Text authorWithColor = Text.literal(authorName).setStyle(roleColor == null ? Style.EMPTY : Style.EMPTY.withColor(roleColor));
+		MutableText text = Text.empty();
+		return text.append(split[0])
 			.append(authorWithColor)
 			.append(Text.literal(split[1]).setStyle(roleColor == null ? Style.EMPTY : Style.EMPTY.withColor(Formatting.WHITE)));
 	}
@@ -92,5 +113,18 @@ public class BridgeFormatter {
 		if (split.length < 3)
 			return Text.empty();
 		return Text.literal(split[2]);
+	}
+
+	private static Text createReplyPrefix(String authorName, TextColor roleColor) {
+		String[] replySplit = CantileverConfig.INSTANCE.replyFormat.get().split("%s");
+		MutableText text = Text.empty();
+		if (replySplit.length > 0) {
+			text.append(replySplit[0]);
+		}
+		text.append(getMinecraftPrefix(authorName, roleColor));
+		if (replySplit.length > 1) {
+			text.append(replySplit[1]);
+		}
+		return text;
 	}
 }
