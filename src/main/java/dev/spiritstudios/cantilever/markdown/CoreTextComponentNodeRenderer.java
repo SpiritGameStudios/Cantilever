@@ -120,9 +120,21 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 
 	@Override
 	public void visit(StrongEmphasis emphasis) {
-		writer.withBold(true);
-		super.visit(emphasis);
-		writer.withBold(false);
+		if (emphasis.getOpeningDelimiter().equals("**")) {
+			writer.withBold(true);
+			super.visit(emphasis);
+			writer.withBold(false);
+		}
+		if (emphasis.getOpeningDelimiter().equals("~~")) {
+			writer.withStrikethrough(true);
+			super.visit(emphasis);
+			writer.withStrikethrough(false);
+		}
+		if (emphasis.getOpeningDelimiter().equals("__")) {
+			writer.withUnderline(true);
+			super.visit(emphasis);
+			writer.withUnderline(false);
+		}
 	}
 
 	@Override

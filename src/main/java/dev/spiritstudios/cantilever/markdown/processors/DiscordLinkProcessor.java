@@ -1,4 +1,4 @@
-package dev.spiritstudios.cantilever.markdown.nodes;
+package dev.spiritstudios.cantilever.markdown.processors;
 
 import org.commonmark.node.Link;
 import org.commonmark.node.Text;
@@ -8,10 +8,10 @@ import org.commonmark.parser.beta.*;
 import java.util.regex.Pattern;
 
 public class DiscordLinkProcessor implements LinkProcessor {
-	public static final DiscordLinkProcessor INSTANCE = new DiscordLinkProcessor();
 	private static final Pattern URL = Pattern.compile("^https?://[-a-zA-Z0-9-._~:/?#\\[\\]@!$&'()*+,;=]+$");
+	public static final DiscordLinkProcessor INSTANCE = new DiscordLinkProcessor();
 
-	private DiscordLinkProcessor() {
+	protected DiscordLinkProcessor() {
 	}
 
 	@Override

@@ -2,7 +2,8 @@ package dev.spiritstudios.cantilever.bridge;
 
 import dev.spiritstudios.cantilever.CantileverConfig;
 import dev.spiritstudios.cantilever.markdown.TextComponentRenderer;
-import dev.spiritstudios.cantilever.markdown.nodes.DiscordLinkProcessor;
+import dev.spiritstudios.cantilever.markdown.processors.DiscordLinkProcessor;
+import dev.spiritstudios.cantilever.markdown.processors.StrikethroughDelimiterProcessor;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.minecraft.text.*;
@@ -51,17 +52,22 @@ public class BridgeFormatter {
 		return text;
 	}
 
+	private static final TextComponentRenderer RENDERER = new TextComponentRenderer.Builder()
+		.build();
+	private static final TextComponentRenderer SINGLE_LINE_RENDERER = new TextComponentRenderer.Builder()
+		.stripNewLines(true)
+		.build();
+
 	public static List<Text> formatDiscordMarkdown(String discordContent, Text prefix, Text suffix, boolean singleLine) {
 		if (discordContent.isBlank())
 			return Collections.emptyList();
 
 		Parser parser = Parser.builder()
 			.linkProcessor(DiscordLinkProcessor.INSTANCE)
+			.customDelimiterProcessor(StrikethroughDelimiterProcessor.INSTANCE)
 			.build();
 		Node node = parser.parse(discordContent);
-		var renderer = new TextComponentRenderer.Builder()
-			.stripNewLines(singleLine)
-			.build();
+		var renderer = singleLine ? SINGLE_LINE_RENDERER : RENDERER;
 		return renderer.render(node).stream()
 			.map(mutableText -> prefixAndSuffixText(prefix, suffix, mutableText))
 			.toList();
