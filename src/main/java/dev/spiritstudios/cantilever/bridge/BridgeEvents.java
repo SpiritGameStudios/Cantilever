@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
@@ -90,9 +91,7 @@ public class BridgeEvents {
 								return;
 							}
 
-							for (Text text : BridgeFormatter.formatDiscordText(event)) {
-								BridgeEvents.bridge.sendUserMessageD2M(new BridgeTextContent(text));
-							}
+							BridgeEvents.bridge.sendUserMessageD2M(event);
 						} catch (Exception ex) {
 							Cantilever.LOGGER.error("Caught exception in D2M Message Scheduler", ex);
 						}
@@ -101,9 +100,7 @@ public class BridgeEvents {
 				}
 
 
-				for (Text text : BridgeFormatter.formatDiscordText(event)) {
-					BridgeEvents.bridge.sendUserMessageD2M(new BridgeTextContent(text));
-				}
+				BridgeEvents.bridge.sendUserMessageD2M(event);
 			}
 
 			private static boolean isMessageWebhook(Message message, Message originalMessage) {

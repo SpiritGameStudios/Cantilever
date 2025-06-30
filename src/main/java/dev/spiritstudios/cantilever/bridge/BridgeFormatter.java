@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.List;
 
 public class BridgeFormatter {
-	public static List<Text> formatDiscordText(MessageReceivedEvent event) {
+	public static List<Text> formatUserDiscordText(MessageReceivedEvent event) {
 		String authorName = event.getMember() != null ?
 			event.getMember().getEffectiveName() : event.getAuthor().getEffectiveName();
 
@@ -35,13 +35,13 @@ public class BridgeFormatter {
 		}
 
 		Message message = event.getMessage();
-		text.addAll(formatDiscordMarkdown(
-			message.getContentRaw(),
-			prefix, suffix, false));
+		text.addAll(formatDiscordMarkdown(message.getContentRaw(),
+			prefix, suffix,
+			false));
 
 		for (Message.Attachment attachment : message.getAttachments()) {
 			String url = attachment.getUrl();
-			Text toAdd = prefixAndSuffixText(prefix, suffix, Text.literal(attachment.getFileName())
+			Text toAdd = prefixAndSuffixText(Text.empty().append("⛓").append(prefix), suffix, Text.literal(attachment.getFileName())
 				.setStyle(Style.EMPTY.withColor(Formatting.BLUE)
 					.withUnderline(true)
 					.withClickEvent(new ClickEvent.OpenUrl(URI.create(url)))
@@ -82,6 +82,22 @@ public class BridgeFormatter {
 		if (!suffix.equals(Text.empty()))
 			returnText.append(suffix);
 		return returnText;
+	}
+
+	public static String filterMessageM2D(String message) {
+		return filterMessage(CantileverConfig.INSTANCE.m2dReplacements.get(), message);
+	}
+
+	public static String filterMessageD2M(String message) {
+		return filterMessage(CantileverConfig.INSTANCE.d2mReplacements.get(), message);
+	}
+
+	private static String filterMessage(Map<String, String> map, String message) {
+		final String[] replacedMessage = {message};
+		map.forEach(
+			(key, replacement) -> replacedMessage[0] = replacedMessage[0].replace(key, replacement)
+		);
+		return replacedMessage[0];
 	}
 
 	private static List<MutableText> reduceToOneLine(List<MutableText> texts) {

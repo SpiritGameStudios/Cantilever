@@ -1,5 +1,6 @@
 package dev.spiritstudios.cantilever.markdown;
 
+import dev.spiritstudios.cantilever.bridge.BridgeFormatter;
 import org.commonmark.node.*;
 import org.commonmark.renderer.NodeRenderer;
 
@@ -139,7 +140,7 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 
 	@Override
 	public void visit(Text text) {
-		String literal = text.getLiteral();
+		String literal = BridgeFormatter.filterMessageD2M(text.getLiteral());
 		if (writer.isAtLineStart() && !literal.isEmpty()) {
 			char c = literal.charAt(0);
 			switch (c) {
