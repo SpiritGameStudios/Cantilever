@@ -1,20 +1,14 @@
 package dev.spiritstudios.cantilever.bridge;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.spiritstudios.cantilever.Cantilever;
 import net.minecraft.text.*;
 
 import java.util.Optional;
 
-public record BridgeTextContent(Text content, boolean bot) implements TextContent {
-	public static MapCodec<BridgeTextContent> CODEC = RecordCodecBuilder.mapCodec(
-		instance -> instance.group(
-			TextCodecs.CODEC.fieldOf("text").forGetter(BridgeTextContent::content),
-			Codec.BOOL.fieldOf("bot").forGetter(BridgeTextContent::bot)
-		).apply(instance, BridgeTextContent::new)
-	);
+public record BridgeTextContent(Text content) implements TextContent {
+	public static MapCodec<BridgeTextContent> CODEC = MapCodec.assumeMapUnsafe(TextCodecs.CODEC
+		.xmap(BridgeTextContent::new, content -> content.content));
 
 	public static final TextContent.Type<BridgeTextContent> TYPE = new Type<>(
 		CODEC,
@@ -23,12 +17,21 @@ public record BridgeTextContent(Text content, boolean bot) implements TextConten
 
 	@Override
 	public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
-		return content.visit(visitor);
+		Optional<T> visitResult = content.visit(visitor);
+		if (visitResult.isEmpty()) {
+			// This is a workaround for the game resolving the Bridge content as empty. Don't ask why!
+			return visitor.accept("");
+		}
+		return visitResult;
 	}
 
 	@Override
 	public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
-		return content.visit(visitor, style);
+		Optional<T> visitResult = content.visit(visitor, style);
+		if (visitResult.isEmpty()) {
+			return visitor.accept(style, "");
+		}
+		return visitResult;
 	}
 
 	@Override

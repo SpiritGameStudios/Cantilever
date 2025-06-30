@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
@@ -47,13 +48,14 @@ public class BridgeEvents {
 		});
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
-			if (message.getContent() instanceof BridgeTextContent content && content.bot()) return;
+			if (message.getContent() instanceof BridgeTextContent) return;
 			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted(message.getString()));
 		});
 
 		ServerMessageEvents.COMMAND_MESSAGE.register((message, source, parameters) -> {
-			if (message.getContent().getContent() instanceof BridgeTextContent content && content.bot()) return;
-			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted(message.getContent().getString()));
+			if (message.getContent().getContent() instanceof BridgeTextContent) return;
+			// TODO: Apply decorations to Minecraft messages.
+			BridgeEvents.bridge.sendBasicMessageM2D(parameters.applyChatDecoration(message.getContent()).getString());
 		});
 
 		ServerMessageEvents.CHAT_MESSAGE.register((message, user, params) -> BridgeEvents.bridge.sendWebhookMessageM2D(message, user));
@@ -75,7 +77,6 @@ public class BridgeEvents {
 					scheduler = Executors.newScheduledThreadPool(1, runnable -> {
 						var thread = new Thread(runnable, "Cantilever D2M Message Scheduler");
 						thread.setDaemon(true);
-						thread.setUncaughtExceptionHandler((thread1, throwable) -> Cantilever.LOGGER.error("Caught exception in D2M Message Scheduler", throwable));
 						return thread;
 					});
 				}
@@ -83,18 +84,23 @@ public class BridgeEvents {
 				if (scheduler != null) {
 					var historyFuture = event.getChannel().asGuildMessageChannel().getHistoryAfter(event.getMessageIdLong(), CantileverConfig.INSTANCE.webhookMessagesToCheck.get());
 					scheduler.schedule(() -> {
-						var history = historyFuture.complete();
-						if (!history.isEmpty() && !event.isWebhookMessage() && history.getRetrievedHistory().stream()
-							.anyMatch(message -> isMessageWebhook(message, event.getMessage()))) {
-							return;
-						}
+						try {
+							var history = historyFuture.complete();
+							if (!history.isEmpty() && !event.isWebhookMessage() && history.getRetrievedHistory().stream()
+								.noneMatch(message -> isMessageWebhook(message, event.getMessage()))) {
+								return;
+							}
 
-						BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
+							BridgeEvents.bridge.sendUserMessageD2M(event);
+						} catch (Exception ex) {
+							Cantilever.LOGGER.error("Caught exception in D2M Message Scheduler", ex);
+						}
 					}, CantileverConfig.INSTANCE.d2mMessageDelay.get(), TimeUnit.MILLISECONDS);
 					return;
 				}
 
-				BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
+
+				BridgeEvents.bridge.sendUserMessageD2M(event);
 			}
 
 			private static boolean isMessageWebhook(Message message, Message originalMessage) {
