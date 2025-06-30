@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
@@ -90,22 +89,12 @@ public class BridgeEvents {
 							return;
 						}
 
-						BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(
-							Text.of(CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
-								event.getAuthor().getName(), event.getMessage().getContentDisplay()
-							)),
-							true
-						));
+						BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
 					}, CantileverConfig.INSTANCE.d2mMessageDelay.get(), TimeUnit.MILLISECONDS);
 					return;
 				}
 
-				BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(
-					Text.of(CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
-						event.getAuthor().getName(), event.getMessage().getContentDisplay()
-					)),
-					true
-				));
+				BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
 			}
 
 			private static boolean isMessageWebhook(Message message, Message originalMessage) {

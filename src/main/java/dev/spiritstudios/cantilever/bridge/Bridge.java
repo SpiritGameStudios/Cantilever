@@ -17,8 +17,10 @@ import net.minecraft.network.message.SignedMessage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -84,6 +86,22 @@ public class Bridge {
 		BridgeEvents.init(this);
 	}
 
+	private String filterMessage(Map<String, String> map, String message) {
+		final String[] replacedMessage = {message};
+		map.forEach(
+			(key, replacement) -> replacedMessage[0] = replacedMessage[0].replace(key, replacement)
+		);
+		return replacedMessage[0];
+	}
+
+	private String filterMessageM2D(String message) {
+		return filterMessage(CantileverConfig.INSTANCE.m2dReplacements.get(), message);
+	}
+
+	private String filterMessageD2M(String message) {
+		return filterMessage(CantileverConfig.INSTANCE.d2mReplacements.get(), message);
+	}
+
 	public void sendBasicMessageM2D(String message) {
 		bridgeChannel.sendMessage(message).queue();
 	}
@@ -104,9 +122,18 @@ public class Bridge {
 			new WebhookMessageBuilder()
 				.setUsername(username)
 				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString()))
-				.append(message.getContent().getString())
+				.append(filterMessageM2D(message.getContent().getString()))
 				.build()
 		);
+	}
+
+	public void sendUserMessageD2M(String author, String message) {
+		sendBasicMessageD2M(new BridgeTextContent(
+			Text.of(CantileverConfig.INSTANCE.gameChatFormat.get().formatted(
+				author, filterMessageD2M(message)
+			)),
+			true
+		));
 	}
 
 	public void sendBasicMessageD2M(BridgeTextContent textContent) {
