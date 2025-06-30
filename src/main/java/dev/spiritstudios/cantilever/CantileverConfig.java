@@ -9,6 +9,7 @@ import dev.spiritstudios.specter.api.config.Value;
 import net.dv8tion.jda.api.entities.Activity;
 
 import java.util.List;
+import java.util.Map;
 
 public class CantileverConfig extends Config<CantileverConfig> {
 	public static final ConfigHolder<CantileverConfig, ?> HOLDER = ConfigHolder.builder(Cantilever.id(Cantilever.MODID), CantileverConfig.class)
@@ -59,6 +60,20 @@ public class CantileverConfig extends Config<CantileverConfig> {
 
 	public final Value<Boolean> useMinecraftNicknames = booleanValue(true)
 		.comment("Whether to use nicknames defined by players or Minecraft account name on Discord")
+		.build();
+
+	public final Value<Map<String, String>> m2dReplacements = value(
+		Map.of(),
+		Codec.unboundedMap(Codec.STRING, Codec.STRING)
+	)
+		.comment("A map of text to text replacements from MC -> Discord; useful for Styled Chat Emoji")
+		.build();
+
+	public final Value<Map<String, String>> d2mReplacements = value(
+		Map.of(),
+		Codec.unboundedMap(Codec.STRING, Codec.STRING)
+	)
+		.comment("A map of text to text replacements from Discord -> MC; useful for Styled Chat Emoji")
 		.build();
 
 	public record WebhooksForRemoval(List<Long> webhookIds, boolean inverted) {

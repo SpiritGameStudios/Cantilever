@@ -7,7 +7,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
@@ -35,15 +34,17 @@ public class BridgeEvents {
 			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server started"))
 		);
 
-		ServerLifecycleEvents.SERVER_STOPPING.register(server ->
-			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopping..."))
-		);
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			if (scheduler != null) {
+				scheduler.shutdownNow();
+			}
+			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopping..."));
+		});
 
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
-				BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopped"));
-				bridge.api().shutdown();
-			}
-		);
+			BridgeEvents.bridge.sendShutdownMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopped"));
+			BridgeEvents.bridge.api().shutdownNow();
+		});
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
 			if (message.getContent() instanceof BridgeTextContent) return;
@@ -90,7 +91,7 @@ public class BridgeEvents {
 							}
 
 							for (Text text : BridgeFormatter.formatDiscordText(event)) {
-								BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(text));
+								BridgeEvents.bridge.sendUserMessageD2M(new BridgeTextContent(text));
 							}
 						} catch (Exception ex) {
 							Cantilever.LOGGER.error("Caught exception in D2M Message Scheduler", ex);
@@ -101,7 +102,7 @@ public class BridgeEvents {
 
 
 				for (Text text : BridgeFormatter.formatDiscordText(event)) {
-					BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(text));
+					BridgeEvents.bridge.sendUserMessageD2M(new BridgeTextContent(text));
 				}
 			}
 
