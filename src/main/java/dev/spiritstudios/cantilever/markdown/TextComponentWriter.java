@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class TextComponentWriter {
+	private static final int WHITE = 16777215;
+
 	private final List<MutableText> texts;
 	private final LineBreakRendering lineBreakRendering;
 
@@ -86,8 +88,7 @@ public class TextComponentWriter {
 			}
 			texts.getLast().append(Text.literal(title[i]).setStyle(style));
 		}
-		withColor(-1);
-		withUnderline(false);
+		texts.getLast().append(Text.literal("").setStyle(Style.EMPTY.withColor(WHITE).withUnderline(false)));
 	}
 
 	public void lineWithSeparator() {
@@ -136,7 +137,7 @@ public class TextComponentWriter {
 			previousUnderlineState = !isUnderline;
 		}
 		if (textColor != previousTextColor) {
-			literal.setStyle(literal.getStyle().withColor(TextColor.fromRgb(textColor != -1 ? 16777215 : textColor)));
+			literal.setStyle(literal.getStyle().withColor(TextColor.fromRgb(textColor != -1 ? WHITE : textColor)));
 			previousTextColor = textColor;
 		}
 		return literal;
