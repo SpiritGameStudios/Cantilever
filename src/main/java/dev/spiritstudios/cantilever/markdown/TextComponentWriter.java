@@ -2,7 +2,6 @@ package dev.spiritstudios.cantilever.markdown;
 
 import net.minecraft.text.*;
 import org.commonmark.renderer.text.LineBreakRendering;
-import org.commonmark.text.CharMatcher;
 
 import java.net.URI;
 import java.util.LinkedList;
@@ -46,19 +45,11 @@ public class TextComponentWriter {
 		this.textColor = color;
 	}
 
-	public void text(String s, CharMatcher escape) {
-		if (s.isEmpty())
-			return;
-		flushLines();
-		texts.getLast().append(getText(textString(s, escape)));
-		atLineStart = false;
-	}
-
 	public void text(String s) {
 		if (s.isEmpty())
 			return;
 		flushLines();
-		texts.getLast().append(getText(textString(s, null)));
+		texts.getLast().append(getText(s));
 		atLineStart = false;
 	}
 
@@ -121,7 +112,7 @@ public class TextComponentWriter {
 	private void writePrefixes() {
 		if (!prefixes.isEmpty()) {
 			for (String prefix : prefixes) {
-				text(prefix, null);
+				text(prefix);
 			}
 		}
 	}
@@ -149,34 +140,5 @@ public class TextComponentWriter {
 			previousTextColor = textColor;
 		}
 		return literal;
-	}
-
-	private String textString(String string, CharMatcher escape) {
-		StringBuilder builder = new StringBuilder();
-		if (escape == null) {
-			builder.append(string);
-		} else {
-			for (int i = 0; i < string.length(); ++i) {
-				append(builder, string.charAt(i), escape);
-			}
-		}
-		return builder.toString();
-	}
-
-	private void append(StringBuilder builder, char c, CharMatcher escape) {
-		if (needsEscaping(c, escape)) {
-			if (c == '\n') {
-				builder.append("&#10;");
-			} else {
-				builder.append("\\");
-				builder.append(c);
-			}
-		} else {
-			builder.append(c);
-		}
-	}
-
-	private boolean needsEscaping(char c, CharMatcher escape) {
-		return (escape != null && escape.matches(c));
 	}
 }

@@ -1,13 +1,8 @@
 package dev.spiritstudios.cantilever.markdown;
 
-import net.minecraft.text.MutableText;
 import org.commonmark.node.*;
 import org.commonmark.renderer.NodeRenderer;
-import org.commonmark.text.AsciiMatcher;
-import org.commonmark.text.CharMatcher;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,8 +12,6 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 	protected final TextComponentNodeRendererContext context;
 	private final TextComponentWriter writer;
 
-	private final AsciiMatcher textEscape;
-	private final CharMatcher textEscapeInHeading;
 	private ListHolder listHolder;
 
 	private final Pattern orderedListMarkerPattern = Pattern.compile("^([0-9]{1,9})([.)])");
@@ -26,8 +19,6 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 	public CoreTextComponentNodeRenderer(TextComponentNodeRendererContext context) {
 		this.context = context;
 		this.writer = context.getWriter();
-		textEscape = AsciiMatcher.builder().anyOf("[]<>`&\n\\").anyOf(context.getSpecialCharacters()).build();
-		textEscapeInHeading = AsciiMatcher.builder(textEscape).anyOf("#").build();
 	}
 
 	@Override
@@ -66,7 +57,8 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 	}
 
 	public void visit(Link link) {
-		String[] title =link.getTitle().split("\n");
+		String[] title =  link.getTitle() != null ? link.getTitle().split("\n") :
+			new String[] { link.getDestination() };
 		writer.link(title, link.getDestination());
 	}
 
@@ -83,6 +75,9 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 
 	@Override
 	public void visit(ListItem listItem) {
+		if (!writer.isAtLineStart()) {
+			writer.lineWithSeparator();
+		}
 		int markerIndent = listItem.getMarkerIndent() != null ? listItem.getMarkerIndent() : 0;
 		String marker;
 		if (listHolder instanceof BulletListHolder bulletListHolder) {
@@ -95,11 +90,14 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 		}
 		Integer contentIndent = listItem.getContentIndent();
 		String spaces = contentIndent != null ? " ".repeat(Math.max(contentIndent - marker.length(), 1)) : " ";
-		writer.prefix(marker);
+
 		writer.prefix(spaces);
+		writer.prefix(marker);
 
 		writer.pushPrefix(" ".repeat(marker.length() + spaces.length()));
+
 		visitChildren(listItem);
+
 		writer.popPrefix();
 	}
 
@@ -172,9 +170,7 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 			}
 		}
 
-		CharMatcher escape = text.getParent() instanceof Heading ? textEscapeInHeading : textEscape;
-
-		writer.text(literal, escape);
+		writer.text(literal);
 	}
 
 	private static class ListHolder {
