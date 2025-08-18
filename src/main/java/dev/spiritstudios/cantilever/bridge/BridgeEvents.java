@@ -70,6 +70,9 @@ public class BridgeEvents {
 					return;
 				}
 
+				String authorName = event.getMember() != null ?
+					event.getMember().getEffectiveName() : event.getAuthor().getEffectiveName();
+
 				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
 				if (scheduler == null && CantileverConfig.INSTANCE.d2mMessageDelay.get() > 0 && (!webhooksForRemoval.webhookIds().isEmpty() || webhooksForRemoval.inverted())) {
 					scheduler = Executors.newScheduledThreadPool(1, runnable -> {
@@ -89,12 +92,12 @@ public class BridgeEvents {
 							return;
 						}
 
-						BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
+						BridgeEvents.bridge.sendUserMessageD2M(authorName, event.getMessage().getContentDisplay());
 					}, CantileverConfig.INSTANCE.d2mMessageDelay.get(), TimeUnit.MILLISECONDS);
 					return;
 				}
 
-				BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
+				BridgeEvents.bridge.sendUserMessageD2M(authorName, event.getMessage().getContentDisplay());
 			}
 
 			private static boolean isMessageWebhook(Message message, Message originalMessage) {
