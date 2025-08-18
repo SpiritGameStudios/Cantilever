@@ -13,14 +13,13 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import org.commonmark.node.*;
 import org.commonmark.parser.Parser;
-import org.commonmark.renderer.markdown.MarkdownRenderer;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.util.*;
 import java.util.List;
 
-public class BridgeFormatter {
+public class D2MFormatter {
 	public static List<Text> formatUserDiscordText(MessageReceivedEvent event) {
 		String authorName = event.getMember() != null ?
 			event.getMember().getEffectiveName() : event.getAuthor().getEffectiveName();

@@ -22,11 +22,12 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import static dev.spiritstudios.cantilever.Cantilever.LOGGER;
+import static dev.spiritstudios.cantilever.bridge.D2MFormatter.filterMessageM2D;
 
 public class Bridge {
 	private final @Nullable JDA api;
@@ -101,30 +102,6 @@ public class Bridge {
 		BridgeEvents.init(this);
 	}
 
-	private String filterMessage(Map<String, String> map, String message) {
-		final String[] replacedMessage = {message};
-		map.forEach(
-			(key, replacement) -> replacedMessage[0] = replacedMessage[0].replace(key, replacement)
-		);
-		return replacedMessage[0];
-	}
-
-	private String filterMessageM2D(String message) {
-		return filterMessage(CantileverConfig.INSTANCE.m2dReplacements.get(), message);
-	}
-
-	private String filterMessageD2M(String message) {
-		return filterMessage(CantileverConfig.INSTANCE.d2mReplacements.get(), message);
-	}
-
-	public void sendBasicMessageM2D(String message) {
-		bridgeChannel.sendMessage(message).queue();
-	}
-
-	public void sendShutdownMessageM2D(String message) {
-		bridgeChannel.sendMessage(message).complete();
-	}
-
 	public void sendWebhookMessageM2D(SignedMessage message, ServerPlayerEntity sender) {
 		if (this.bridgeChannelWebhook == null) {
 			sendBasicMessageM2D(message.getContent().getString());
@@ -142,8 +119,16 @@ public class Bridge {
 		);
 	}
 
+	public void sendBasicMessageM2D(String message) {
+		bridgeChannel.sendMessage(message).queue();
+	}
+
+	public void sendShutdownMessageM2D(String message) {
+		bridgeChannel.sendMessage(message).complete();
+	}
+
 	public void sendUserMessageD2M(MessageReceivedEvent event) {
-		List<Text> texts = BridgeFormatter.formatUserDiscordText(event);
+		List<Text> texts = D2MFormatter.formatUserDiscordText(event);
 		for (Text text : texts) {
 			sendBasicMessageD2M(new BridgeTextContent(text));
 		}

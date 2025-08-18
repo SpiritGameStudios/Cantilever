@@ -1,11 +1,12 @@
 package dev.spiritstudios.cantilever.markdown;
 
-import dev.spiritstudios.cantilever.bridge.BridgeFormatter;
 import org.commonmark.node.*;
 import org.commonmark.renderer.NodeRenderer;
 
 import java.util.Set;
 import java.util.function.BiConsumer;
+
+import static dev.spiritstudios.cantilever.bridge.D2MFormatter.filterMessageD2M;
 
 public class CoreTextComponentNodeRenderer extends AbstractVisitor implements NodeRenderer {
 
@@ -139,7 +140,7 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 
 	@Override
 	public void visit(Text text) {
-		String literal = BridgeFormatter.filterMessageD2M(text.getLiteral());
+		String literal = filterMessageD2M(text.getLiteral());
 		if (writer.isAtLineStart() && !literal.isEmpty()) {
 			char c = literal.charAt(0);
 			if (c == '\t' | c == ' ') {
