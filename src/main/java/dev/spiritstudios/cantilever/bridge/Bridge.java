@@ -3,7 +3,6 @@ package dev.spiritstudios.cantilever.bridge;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
-import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -21,46 +20,57 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static dev.spiritstudios.cantilever.Cantilever.LOGGER;
+
 public class Bridge {
-	private final JDA api;
+	private final @Nullable JDA api;
 	private TextChannel bridgeChannel;
 	private WebhookClient bridgeChannelWebhook;
 	public final MinecraftServer server;
 
 	public Bridge(MinecraftServer server) {
 		this.server = server;
+		JDA api = null;
 
-		if (Objects.equals(CantileverConfig.INSTANCE.token.get(), CantileverConfig.INSTANCE.token.defaultValue()))
-			throw new IllegalStateException("You forgot to set your bot token in the config file! Please create a discord bot application and add it's token to the config file.");
+		try {
+			if (Objects.equals(CantileverConfig.INSTANCE.token.get(), CantileverConfig.INSTANCE.token.defaultValue()))
+				throw new IllegalStateException("You forgot to set your bot token in the config file! Please create a discord bot application and add it's token to the config file. We'll sit here and wait.");
 
-		api = JDABuilder
-			.createLight(
-				CantileverConfig.INSTANCE.token.get(),
-				GatewayIntent.GUILD_MESSAGES,
-				GatewayIntent.GUILD_MEMBERS,
-				GatewayIntent.MESSAGE_CONTENT
-			)
-			.setMemberCachePolicy(MemberCachePolicy.ALL) // Used for getting member from original replies.
-			.setActivity(CantileverConfig.INSTANCE.statusMessage.get().isEmpty() ?
-				null :
-				Activity.of(CantileverConfig.INSTANCE.activityType.get(), CantileverConfig.INSTANCE.statusMessage.get()))
-			.addEventListeners(new ListenerAdapter() {
-				@Override
-				public void onReady(@NotNull ReadyEvent event) {
-					ready();
-				}
-			})
-			.build();
+			api = JDABuilder
+				.createLight(
+					CantileverConfig.INSTANCE.token.get(),
+					GatewayIntent.GUILD_MESSAGES,
+					GatewayIntent.MESSAGE_CONTENT
+				)
+				.setMemberCachePolicy(MemberCachePolicy.ALL) // Used for getting member from original replies.
+				.setActivity(CantileverConfig.INSTANCE.statusMessage.get().isEmpty() ?
+					null :
+					Activity.of(CantileverConfig.INSTANCE.activityType.get(), CantileverConfig.INSTANCE.statusMessage.get()))
+				.addEventListeners(new ListenerAdapter() {
+					@Override
+					public void onReady(@NotNull ReadyEvent event) {
+						ready();
+					}
+				})
+				.build();
+
+		} catch (IllegalArgumentException e) {
+			LOGGER.error("API initialisation error whilst starting Cantilever", e);
+		}
+
+		this.api = api;
 	}
 
 	private void ready() {
-		Cantilever.LOGGER.trace("Connected to Discord");
+		if (api == null) return;
+
+		LOGGER.trace("Connected to Discord");
 
 		long bridgeChannelId = CantileverConfig.INSTANCE.channelId.get();
 
@@ -68,7 +78,7 @@ public class Bridge {
 		if (bridgeChannel == null)
 			throw new IllegalStateException("Channel with id %s could not be found".formatted(bridgeChannelId));
 
-		Cantilever.LOGGER.info(
+		LOGGER.info(
 			"Cantilever connected to channel \"{}\"",
 			bridgeChannel.getName()
 		);
@@ -78,7 +88,7 @@ public class Bridge {
 				.equals("Cantilever Bridge Webhook %s".formatted(bridgeChannelId))).findAny().orElse(null);
 
 			if (existingWebhook != null) {
-				Cantilever.LOGGER.info("Successfully found existing webhook for channel {}", bridgeChannelId);
+				LOGGER.info("Successfully found existing webhook for channel {}", bridgeChannelId);
 				bridgeChannelWebhook = JDAWebhookClient.from(existingWebhook);
 				return;
 			}
@@ -89,6 +99,22 @@ public class Bridge {
 		});
 
 		BridgeEvents.init(this);
+	}
+
+	private String filterMessage(Map<String, String> map, String message) {
+		final String[] replacedMessage = {message};
+		map.forEach(
+			(key, replacement) -> replacedMessage[0] = replacedMessage[0].replace(key, replacement)
+		);
+		return replacedMessage[0];
+	}
+
+	private String filterMessageM2D(String message) {
+		return filterMessage(CantileverConfig.INSTANCE.m2dReplacements.get(), message);
+	}
+
+	private String filterMessageD2M(String message) {
+		return filterMessage(CantileverConfig.INSTANCE.d2mReplacements.get(), message);
 	}
 
 	public void sendBasicMessageM2D(String message) {
@@ -102,7 +128,7 @@ public class Bridge {
 	public void sendWebhookMessageM2D(SignedMessage message, ServerPlayerEntity sender) {
 		if (this.bridgeChannelWebhook == null) {
 			sendBasicMessageM2D(message.getContent().getString());
-			Cantilever.LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
+			LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
 			return;
 		}
 		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.get() && sender.getDisplayName() != null ? sender.getDisplayName().getString() : sender.getName().getString();
@@ -111,7 +137,7 @@ public class Bridge {
 			new WebhookMessageBuilder()
 				.setUsername(username)
 				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString()))
-				.append(BridgeFormatter.filterMessageM2D(message.getContent().getString()))
+				.append(filterMessageM2D(message.getContent().getString()))
 				.build()
 		);
 	}
