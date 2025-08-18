@@ -5,8 +5,7 @@ import org.commonmark.node.*;
 import org.commonmark.renderer.NodeRenderer;
 
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.BiConsumer;
 
 public class CoreTextComponentNodeRenderer extends AbstractVisitor implements NodeRenderer {
 
@@ -14,8 +13,6 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 	private final TextComponentWriter writer;
 
 	private ListHolder listHolder;
-
-	private final Pattern orderedListMarkerPattern = Pattern.compile("^([0-9]{1,9})([.)])");
 
 	public CoreTextComponentNodeRenderer(TextComponentNodeRendererContext context) {
 		this.context = context;
@@ -112,30 +109,32 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 		writer.newLine();
 	}
 
+	// TODO: Discord is weird with emphases. Post-process these rather than pre-process like we are now.
 	@Override
 	public void visit(Emphasis emphasis) {
-		writer.withItalic(true);
-		super.visit(emphasis);
-		writer.withItalic(false);
+		format(emphasis, TextComponentWriter::withItalic);
 	}
 
 	@Override
 	public void visit(StrongEmphasis emphasis) {
 		if (emphasis.getOpeningDelimiter().equals("**")) {
-			writer.withBold(true);
-			super.visit(emphasis);
-			writer.withBold(false);
+			format(emphasis, TextComponentWriter::withBold);
 		}
 		if (emphasis.getOpeningDelimiter().equals("~~")) {
-			writer.withStrikethrough(true);
-			super.visit(emphasis);
-			writer.withStrikethrough(false);
+			format(emphasis, TextComponentWriter::withStrikethrough);
 		}
 		if (emphasis.getOpeningDelimiter().equals("__")) {
-			writer.withUnderline(true);
-			super.visit(emphasis);
-			writer.withUnderline(false);
+			format(emphasis, TextComponentWriter::withUnderline);
 		}
+		if (emphasis.getOpeningDelimiter().equals("||")) {
+			format(emphasis, TextComponentWriter::withSpoiler);
+		}
+	}
+
+	private void format(Node node, BiConsumer<TextComponentWriter, Boolean> writerAction) {
+		writerAction.accept(writer, true);
+		visitChildren(node);
+		writerAction.accept(writer, false);
 	}
 
 	@Override
@@ -143,43 +142,8 @@ public class CoreTextComponentNodeRenderer extends AbstractVisitor implements No
 		String literal = BridgeFormatter.filterMessageD2M(text.getLiteral());
 		if (writer.isAtLineStart() && !literal.isEmpty()) {
 			char c = literal.charAt(0);
-			switch (c) {
-				case '-': {
-					// Would be ambiguous with a bullet list marker, escape
-					writer.text("\\-");
-					literal = literal.substring(1);
-					break;
-				}
-				case '#': {
-					// Would be ambiguous with an ATX heading, escape
-					writer.text("\\#");
-					literal = literal.substring(1);
-					break;
-				}
-				case '0':
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9': {
-					// Check for ordered list marker
-					Matcher m = orderedListMarkerPattern.matcher(literal);
-					if (m.find()) {
-						writer.text(m.group(1));
-						writer.text(m.group(2));
-						literal = literal.substring(m.end());
-					}
-					break;
-				}
-				case '\t' | ' ': {
-					writer.text("");
-					literal = literal.substring(1);
-					break;
-				}
+			if (c == '\t' | c == ' ') {
+				literal = literal.substring(1);
 			}
 		}
 

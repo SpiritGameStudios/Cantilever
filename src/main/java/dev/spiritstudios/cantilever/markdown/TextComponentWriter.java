@@ -1,6 +1,13 @@
 package dev.spiritstudios.cantilever.markdown;
 
+import dev.spiritstudios.cantilever.Cantilever;
+import dev.spiritstudios.cantilever.CantileverConfig;
+import eu.pb4.placeholders.api.PlaceholderContext;
+import eu.pb4.styledchat.config.ConfigManager;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import org.commonmark.renderer.text.LineBreakRendering;
 
 import java.net.URI;
@@ -14,10 +21,8 @@ public class TextComponentWriter {
 	private final LineBreakRendering lineBreakRendering;
 
 	private int lines = 0;
-	private boolean isBold, isItalic, isStrikethrough, isUnderline = false;
-	private boolean previousBoldState, previousItalicState, previousStrikethroughState, previousUnderlineState = false;
+	private boolean isBold, isItalic, isStrikethrough, isUnderline, isSpoiler = false;
 	private int textColor = -1;
-	private int previousTextColor = -1;
 	private boolean atLineStart = true;
 
 	private final LinkedList<String> prefixes = new LinkedList<>();
@@ -43,6 +48,10 @@ public class TextComponentWriter {
 		this.isUnderline = underline;
 	}
 
+	public void withSpoiler(boolean spoiler) {
+		this.isSpoiler = spoiler;
+	}
+
 	public void withColor(int color) {
 		this.textColor = color;
 	}
@@ -62,7 +71,7 @@ public class TextComponentWriter {
 		texts.set(texts.size() - 1, Text.empty()
 			.append(getText(s))
 			.append(texts.getLast()));
-		atLineStart= false;
+		atLineStart = false;
 	}
 
 	public void pushPrefix(String s) {
@@ -120,26 +129,35 @@ public class TextComponentWriter {
 
 	private MutableText getText(String string) {
 		MutableText literal = Text.literal(string);
-		if (isBold != previousBoldState) {
+		if (isBold) {
 			literal.setStyle(literal.getStyle().withBold(isBold));
-			previousBoldState = !isBold;
 		}
-		if (isItalic != previousItalicState) {
+		if (isItalic) {
 			literal.setStyle(literal.getStyle().withItalic(isItalic));
-			previousItalicState = !isItalic;
 		}
-		if (isStrikethrough != previousStrikethroughState) {
+		if (isStrikethrough) {
 			literal.setStyle(literal.getStyle().withStrikethrough(isStrikethrough));
-			previousStrikethroughState = !isStrikethrough;
 		}
-		if (isUnderline != previousUnderlineState) {
+		if (isUnderline) {
 			literal.setStyle(literal.getStyle().withUnderline(isUnderline));
-			previousUnderlineState = !isUnderline;
 		}
-		if (textColor != previousTextColor) {
-			literal.setStyle(literal.getStyle().withColor(TextColor.fromRgb(textColor != -1 ? WHITE : textColor)));
-			previousTextColor = textColor;
+		if (textColor != -1) {
+			literal.setStyle(literal.getStyle().withColor(TextColor.fromRgb(textColor)));
+		}
+		if (isSpoiler) {
+			if (CantileverConfig.INSTANCE.logSpoilersD2M.get()) {
+				Cantilever.LOGGER.info("Spoilered Content: {}", literal.getString()); // Log the spoilered text in logs for moderation purposes.
+			}
+			literal = Text.literal(getSpoilerCharacter().repeat(literal.getString().length())).setStyle(Style.EMPTY.withColor(Formatting.GRAY).withHoverEvent(new HoverEvent.ShowText(literal)));
 		}
 		return literal;
+	}
+
+	@SuppressWarnings("deprecation")
+	private static String getSpoilerCharacter() {
+		if (FabricLoader.getInstance().isModLoaded("styledchat")) {
+			return ConfigManager.getConfig().getSpoilerSymbole(PlaceholderContext.of((MinecraftServer) FabricLoader.getInstance().getGameInstance()));
+		}
+		return "▌";
 	}
 }

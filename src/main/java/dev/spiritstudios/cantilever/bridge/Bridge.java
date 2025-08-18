@@ -22,6 +22,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -116,7 +117,8 @@ public class Bridge {
 	}
 
 	public void sendUserMessageD2M(MessageReceivedEvent event) {
-		for (Text text : BridgeFormatter.formatUserDiscordText(event)) {
+		List<Text> texts = BridgeFormatter.formatUserDiscordText(event);
+		for (Text text : texts) {
 			sendBasicMessageD2M(new BridgeTextContent(text));
 		}
 	}

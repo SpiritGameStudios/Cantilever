@@ -62,6 +62,10 @@ public class CantileverConfig extends Config<CantileverConfig> {
 		.comment("Whether to use nicknames defined by players or Minecraft account name on Discord")
 		.build();
 
+	public final Value<Boolean> logSpoilersD2M = booleanValue(true)
+		.comment("Whether to log spoilered Discord messages's contents in the server logs.")
+		.build();
+
 	public final Value<Map<String, String>> m2dReplacements = value(
 		Map.of(),
 		Codec.unboundedMap(Codec.STRING, Codec.STRING)

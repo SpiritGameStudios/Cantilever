@@ -9,9 +9,8 @@ import java.util.regex.Pattern;
 
 public class DiscordLinkProcessor implements LinkProcessor {
 	private static final Pattern URL = Pattern.compile("^https?://[-a-zA-Z0-9-._~:/?#\\[\\]@!$&'()*+,;=]+$");
-	public static final DiscordLinkProcessor INSTANCE = new DiscordLinkProcessor();
 
-	protected DiscordLinkProcessor() {
+	public DiscordLinkProcessor() {
 	}
 
 	@Override

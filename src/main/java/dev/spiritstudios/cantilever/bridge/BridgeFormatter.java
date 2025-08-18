@@ -2,14 +2,18 @@ package dev.spiritstudios.cantilever.bridge;
 
 import dev.spiritstudios.cantilever.CantileverConfig;
 import dev.spiritstudios.cantilever.markdown.TextComponentRenderer;
+import dev.spiritstudios.cantilever.markdown.processors.DiscordBackslashInlineParser;
 import dev.spiritstudios.cantilever.markdown.processors.DiscordLinkProcessor;
-import dev.spiritstudios.cantilever.markdown.processors.StrikethroughDelimiterProcessor;
+import dev.spiritstudios.cantilever.markdown.processors.DiscordTildeDelimiterProcessor;
+import dev.spiritstudios.cantilever.markdown.processors.DiscordVerticalBarDelimiterProcessor;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.minecraft.text.*;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import org.commonmark.node.Node;
+import org.commonmark.node.*;
 import org.commonmark.parser.Parser;
+import org.commonmark.renderer.markdown.MarkdownRenderer;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
@@ -57,16 +61,24 @@ public class BridgeFormatter {
 	private static final TextComponentRenderer SINGLE_LINE_RENDERER = new TextComponentRenderer.Builder()
 		.stripNewLines(true)
 		.build();
+	private static final Parser PARSER = Parser.builder()
+		.enabledBlockTypes(Set.of(
+			BlockQuote.class,
+			Heading.class,
+			ListBlock.class,
+			IndentedCodeBlock.class)
+		).customInlineContentParserFactory(new DiscordBackslashInlineParser.Factory())
+		.linkProcessor(new DiscordLinkProcessor())
+		.customDelimiterProcessor(new DiscordTildeDelimiterProcessor())
+		.customDelimiterProcessor(new DiscordVerticalBarDelimiterProcessor())
+		.build();
 
 	public static List<Text> formatDiscordMarkdown(String discordContent, Text prefix, Text suffix, boolean singleLine) {
 		if (discordContent.isBlank())
 			return Collections.emptyList();
 
-		Parser parser = Parser.builder()
-			.linkProcessor(DiscordLinkProcessor.INSTANCE)
-			.customDelimiterProcessor(StrikethroughDelimiterProcessor.INSTANCE)
-			.build();
-		Node node = parser.parse(discordContent);
+		Node node = PARSER.parse(discordContent);
+
 		var renderer = singleLine ? SINGLE_LINE_RENDERER : RENDERER;
 		return renderer.render(node).stream()
 			.map(mutableText -> prefixAndSuffixText(prefix, suffix, mutableText))
@@ -98,17 +110,6 @@ public class BridgeFormatter {
 			(key, replacement) -> replacedMessage[0] = replacedMessage[0].replace(key, replacement)
 		);
 		return replacedMessage[0];
-	}
-
-	private static List<MutableText> reduceToOneLine(List<MutableText> texts) {
-		MutableText text = Text.empty();
-		for (Text line : texts) {
-			if (!text.getSiblings().isEmpty()) {
-				text.append(" ");
-			}
-			text.append(line);
-		}
-		return List.of(text);
 	}
 
 	@Nullable
