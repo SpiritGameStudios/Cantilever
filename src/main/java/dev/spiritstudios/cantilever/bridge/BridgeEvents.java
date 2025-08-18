@@ -2,14 +2,17 @@ package dev.spiritstudios.cantilever.bridge;
 
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
-import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Unit;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +63,7 @@ public class BridgeEvents {
 	}
 
 	private static ScheduledExecutorService scheduler;
+	private static Map<Long, Unit> deletedMessageIds;
 
 	private static void registerDiscordEvents() {
 		BridgeEvents.bridge.api().addEventListener(new ListenerAdapter() {
@@ -70,24 +74,20 @@ public class BridgeEvents {
 					return;
 				}
 
-				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
-				if (scheduler == null && CantileverConfig.INSTANCE.d2mMessageDelay.get() > 0 && (!webhooksForRemoval.webhookIds().isEmpty() || webhooksForRemoval.inverted())) {
+				if (scheduler == null && CantileverConfig.INSTANCE.d2mMessageDelay.get() > 0) {
 					scheduler = Executors.newScheduledThreadPool(1, runnable -> {
 						var thread = new Thread(runnable, "Cantilever D2M Message Scheduler");
 						thread.setDaemon(true);
 						thread.setUncaughtExceptionHandler((thread1, throwable) -> Cantilever.LOGGER.error("Caught exception in D2M Message Scheduler", throwable));
 						return thread;
 					});
+					deletedMessageIds = new WeakHashMap<>();
 				}
 
 				if (scheduler != null) {
-					var historyFuture = event.getChannel().asGuildMessageChannel().getHistoryAfter(event.getMessageIdLong(), CantileverConfig.INSTANCE.webhookMessagesToCheck.get());
 					scheduler.schedule(() -> {
-						var history = historyFuture.complete();
-						if (!history.isEmpty() && !event.isWebhookMessage() && history.getRetrievedHistory().stream()
-							.anyMatch(message -> isMessageWebhook(message, event.getMessage()))) {
+						if (deletedMessageIds.remove(event.getMessageIdLong()) != null)
 							return;
-						}
 
 						BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
 					}, CantileverConfig.INSTANCE.d2mMessageDelay.get(), TimeUnit.MILLISECONDS);
@@ -97,19 +97,11 @@ public class BridgeEvents {
 				BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
 			}
 
-			private static boolean isMessageWebhook(Message message, Message originalMessage) {
-				if (!message.isWebhookMessage() || message.getAuthor().getIdLong() == BridgeEvents.bridge.getWebhookId() ||
-					!originalMessage.getContentRaw().contains(message.getContentRaw())) {
-					return false;
+			@Override
+			public void onMessageDelete(MessageDeleteEvent event) {
+				if (deletedMessageIds != null) {
+					deletedMessageIds.put(event.getMessageIdLong(), Unit.INSTANCE);
 				}
-
-				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
-				for (long webhookId : webhooksForRemoval.webhookIds()) {
-					if (webhookId == message.getAuthor().getIdLong()) {
-						return !webhooksForRemoval.inverted();
-					}
-				}
-				return webhooksForRemoval.inverted();
 			}
 		});
 	}
