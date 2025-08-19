@@ -12,6 +12,13 @@ fabric_api = "0.126.0+1.21.5"
 specter = "1.1.8"
 jda = "5.5.1"
 discord-webhooks = "0.8.4"
+commonmark = "0.25.0"
+
+predicate_api = "0.6.0+1.21.2"
+placeholder_api = "2.6.4+1.21.5"
+fabric_permissions_api = "0.3.3"
+player_data_api = "0.7.0+1.21.5"
+styled_chat = "2.8.0+1.21.5"
 
 [plugins]
 fabric_loom = { id = "fabric-loom", version.ref = "fabric_loom" }
@@ -31,10 +38,24 @@ specter_serialization = { group = "dev.spiritstudios.specter", name = "specter-s
 
 jda = { group = "net.dv8tion", name = "JDA", version.ref = "jda" }
 discordwebhooks = { group = "club.minnced", name = "discord-webhooks", version.ref = "discord-webhooks" }
+commonmark = { group = "org.commonmark", name = "commonmark", version.ref = "commonmark" }
+
+predicate_api = { group = "eu.pb4", name = "predicate-api", version.ref = "predicate_api" }
+placeholder_api = { group = "eu.pb4", name = "placeholder-api", version.ref = "placeholder_api" }
+fabric_permissions_api = { group = "me.lucko", name = "fabric-permissions-api", version.ref = "fabric_permissions_api" }
+player_data_api = { group = "eu.pb4", name = "player-data-api", version.ref = "player_data_api" }
+styled_chat = { group = "maven.modrinth", name = "styled-chat", version.ref = "styled_chat" }
 
 [bundles]
 specter = [
 	"specter_serialization",
 	"specter_core",
 	"specter_config"
+]
+styled_chat = [
+	"predicate_api",
+	"placeholder_api",
+	"fabric_permissions_api",
+	"player_data_api",
+	"styled_chat"
 ]

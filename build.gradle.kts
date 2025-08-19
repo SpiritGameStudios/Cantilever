@@ -23,13 +23,22 @@ loom {
 
 	mods.create(mod.id) {
 		sourceSet(sourceSets.getByName("main"))
-		sourceSet(sourceSets.getByName("client"))
 	}
 }
 
 repositories {
-	mavenCentral()
 	maven("https://maven.spiritstudios.dev/releases/")
+	maven("https://jitpack.io")
+	maven("https://maven.nucleoid.xyz/")
+	exclusiveContent {
+		forRepository {
+			maven("https://api.modrinth.com/maven")
+		}
+		filter {
+			includeGroup("maven.modrinth")
+		}
+	}
+	mavenCentral()
 }
 
 dependencies {
@@ -47,6 +56,11 @@ dependencies {
 
 	implementation(libs.discordwebhooks)
 	shadow(libs.discordwebhooks)
+
+	implementation(libs.commonmark)
+	shadow(libs.commonmark)
+
+	modImplementation(libs.bundles.styled.chat)
 }
 
 tasks.processResources {
@@ -62,7 +76,7 @@ tasks.processResources {
 }
 
 tasks.shadowJar {
-	tasks.shadowJar.get().configurations.set(arrayListOf(project.configurations.shadow.get()))
+	configurations.set(arrayListOf(project.configurations.shadow.get()))
 }
 
 tasks.remapJar {

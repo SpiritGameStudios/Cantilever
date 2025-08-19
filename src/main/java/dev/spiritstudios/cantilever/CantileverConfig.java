@@ -1,6 +1,7 @@
 package dev.spiritstudios.cantilever;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.spiritstudios.specter.api.config.Config;
 import dev.spiritstudios.specter.api.config.ConfigHolder;
@@ -20,6 +21,10 @@ public class CantileverConfig extends Config<CantileverConfig> {
 
 	public final Value<Long> channelId = value(123456789L, Codec.LONG)
 		.comment("You can get this value by enabling developer mode in discord and right clicking the channel you wish to use as your bridge.")
+		.build();
+
+	public final Value<String> replyFormat = stringValue("Reply to: %s")
+		.comment("Use %s in your value to slot in the message that is being replied to.")
 		.build();
 
 	public final Value<String> gameEventFormat = stringValue("**%s**")
@@ -55,6 +60,10 @@ public class CantileverConfig extends Config<CantileverConfig> {
 
 	public final Value<Boolean> useMinecraftNicknames = booleanValue(true)
 		.comment("Whether to use nicknames defined by players or Minecraft account name on Discord")
+		.build();
+
+	public final Value<Boolean> logSpoilersD2M = booleanValue(true)
+		.comment("Whether to log spoilered Discord messages's contents in the server logs.")
 		.build();
 
 	public final Value<Map<String, String>> m2dReplacements = value(
