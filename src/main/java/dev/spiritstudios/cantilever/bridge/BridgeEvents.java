@@ -3,6 +3,8 @@ package dev.spiritstudios.cantilever.bridge;
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
 import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -10,6 +12,7 @@ import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Unit;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -18,9 +21,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class BridgeEvents {
+	@Nullable
 	private static Bridge bridge;
 
-	public static void init(Bridge bridge) {
+	public static void init(@Nullable Bridge bridge) {
 		BridgeEvents.bridge = bridge;
 
 		registerMinecraftEvents();
@@ -28,6 +32,8 @@ public class BridgeEvents {
 	}
 
 	private static void registerMinecraftEvents() {
+		if (BridgeEvents.bridge == null)
+			return;
 		ServerLifecycleEvents.SERVER_STARTING.register(
 			Identifier.of(Cantilever.MODID, "after_bridge"),
 			server -> BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server starting..."))
@@ -46,7 +52,10 @@ public class BridgeEvents {
 
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			BridgeEvents.bridge.sendShutdownMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopped"));
-			BridgeEvents.bridge.api().shutdownNow();
+			JDA api = BridgeEvents.bridge.api();
+			if (api != null) {
+				api.shutdownNow();
+			}
 		});
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
@@ -66,7 +75,14 @@ public class BridgeEvents {
 	private static Map<Long, Unit> deletedMessageIds;
 
 	private static void registerDiscordEvents() {
-		BridgeEvents.bridge.api().addEventListener(new ListenerAdapter() {
+		if (BridgeEvents.bridge == null)
+			return;
+
+		JDA api = BridgeEvents.bridge.api();
+		if (api == null)
+			return;
+
+		api.addEventListener(new ListenerAdapter() {
 			@Override
 			public void onMessageReceived(@NotNull MessageReceivedEvent event) {
 				if (!BridgeEvents.bridge.channel().map(c -> c == event.getChannel()).orElse(false) ||
