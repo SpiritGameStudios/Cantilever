@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
-import net.minecraft.network.message.SignedMessage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
@@ -122,9 +121,9 @@ public class Bridge {
 		bridgeChannel.sendMessage(message).complete();
 	}
 
-	public void sendWebhookMessageM2D(SignedMessage message, ServerPlayerEntity sender) {
+	public void sendWebhookMessageM2D(Text message, ServerPlayerEntity sender) {
 		if (this.bridgeChannelWebhook == null) {
-			sendBasicMessageM2D(message.getContent().getString());
+			sendBasicMessageM2D(message.getString());
 			LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
 			return;
 		}
@@ -134,7 +133,7 @@ public class Bridge {
 			new WebhookMessageBuilder()
 				.setUsername(username)
 				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString()))
-				.append(filterMessageM2D(message.getContent().getString()))
+				.append(filterMessageM2D(message.getString()))
 				.build()
 		);
 	}
