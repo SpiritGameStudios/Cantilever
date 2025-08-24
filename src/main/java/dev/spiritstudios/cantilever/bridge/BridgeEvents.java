@@ -2,20 +2,14 @@ package dev.spiritstudios.cantilever.bridge;
 
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
-import net.dv8tion.jda.api.events.message.MessageDeleteEvent;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Unit;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -90,6 +84,9 @@ public class BridgeEvents {
 					return;
 				}
 
+				String authorName = event.getMember() != null ?
+					event.getMember().getEffectiveName() : event.getAuthor().getEffectiveName();
+
 				if (scheduler == null && CantileverConfig.INSTANCE.d2mMessageDelay.get() > 0) {
 					scheduler = Executors.newScheduledThreadPool(1, runnable -> {
 						var thread = new Thread(runnable, "Cantilever D2M Message Scheduler");
@@ -105,12 +102,12 @@ public class BridgeEvents {
 						if (deletedMessageIds.remove(event.getMessageIdLong()) != null)
 							return;
 
-						BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
+						BridgeEvents.bridge.sendUserMessageD2M(authorName, event.getMessage().getContentDisplay());
 					}, CantileverConfig.INSTANCE.d2mMessageDelay.get(), TimeUnit.MILLISECONDS);
 					return;
 				}
 
-				BridgeEvents.bridge.sendUserMessageD2M(event.getAuthor().getName(), event.getMessage().getContentDisplay());
+				BridgeEvents.bridge.sendUserMessageD2M(authorName, event.getMessage().getContentDisplay());
 			}
 
 			@Override
