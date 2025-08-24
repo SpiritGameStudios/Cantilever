@@ -15,9 +15,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class BridgeEvents {
+	@Nullable
 	private static Bridge bridge;
 
-	public static void init(Bridge bridge) {
+	public static void init(@Nullable Bridge bridge) {
 		BridgeEvents.bridge = bridge;
 
 		registerMinecraftEvents();
@@ -25,6 +26,8 @@ public class BridgeEvents {
 	}
 
 	private static void registerMinecraftEvents() {
+		if (BridgeEvents.bridge == null)
+			return;
 		ServerLifecycleEvents.SERVER_STARTING.register(
 			Identifier.of(Cantilever.MODID, "after_bridge"),
 			server -> BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server starting..."))
@@ -43,7 +46,10 @@ public class BridgeEvents {
 
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			BridgeEvents.bridge.sendShutdownMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.get().formatted("Server stopped"));
-			BridgeEvents.bridge.api().shutdownNow();
+			JDA api = BridgeEvents.bridge.api();
+			if (api != null) {
+				api.shutdownNow();
+			}
 		});
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
@@ -60,9 +66,17 @@ public class BridgeEvents {
 	}
 
 	private static ScheduledExecutorService scheduler;
+	private static Map<Long, Unit> deletedMessageIds;
 
 	private static void registerDiscordEvents() {
-		BridgeEvents.bridge.api().addEventListener(new ListenerAdapter() {
+		if (BridgeEvents.bridge == null)
+			return;
+
+		JDA api = BridgeEvents.bridge.api();
+		if (api == null)
+			return;
+
+		api.addEventListener(new ListenerAdapter() {
 			@Override
 			public void onMessageReceived(@NotNull MessageReceivedEvent event) {
 				if (!BridgeEvents.bridge.channel().map(c -> c == event.getChannel()).orElse(false) ||
@@ -73,24 +87,20 @@ public class BridgeEvents {
 				String authorName = event.getMember() != null ?
 					event.getMember().getEffectiveName() : event.getAuthor().getEffectiveName();
 
-				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
-				if (scheduler == null && CantileverConfig.INSTANCE.d2mMessageDelay.get() > 0 && (!webhooksForRemoval.webhookIds().isEmpty() || webhooksForRemoval.inverted())) {
+				if (scheduler == null && CantileverConfig.INSTANCE.d2mMessageDelay.get() > 0) {
 					scheduler = Executors.newScheduledThreadPool(1, runnable -> {
 						var thread = new Thread(runnable, "Cantilever D2M Message Scheduler");
 						thread.setDaemon(true);
 						thread.setUncaughtExceptionHandler((thread1, throwable) -> Cantilever.LOGGER.error("Caught exception in D2M Message Scheduler", throwable));
 						return thread;
 					});
+					deletedMessageIds = new WeakHashMap<>();
 				}
 
 				if (scheduler != null) {
-					var historyFuture = event.getChannel().asGuildMessageChannel().getHistoryAfter(event.getMessageIdLong(), CantileverConfig.INSTANCE.webhookMessagesToCheck.get());
 					scheduler.schedule(() -> {
-						var history = historyFuture.complete();
-						if (!history.isEmpty() && !event.isWebhookMessage() && history.getRetrievedHistory().stream()
-							.anyMatch(message -> isMessageWebhook(message, event.getMessage()))) {
+						if (deletedMessageIds.remove(event.getMessageIdLong()) != null)
 							return;
-						}
 
 						BridgeEvents.bridge.sendUserMessageD2M(authorName, event.getMessage().getContentDisplay());
 					}, CantileverConfig.INSTANCE.d2mMessageDelay.get(), TimeUnit.MILLISECONDS);
@@ -100,19 +110,11 @@ public class BridgeEvents {
 				BridgeEvents.bridge.sendUserMessageD2M(authorName, event.getMessage().getContentDisplay());
 			}
 
-			private static boolean isMessageWebhook(Message message, Message originalMessage) {
-				if (!message.isWebhookMessage() || message.getAuthor().getIdLong() == BridgeEvents.bridge.getWebhookId() ||
-					!originalMessage.getContentRaw().contains(message.getContentRaw())) {
-					return false;
+			@Override
+			public void onMessageDelete(MessageDeleteEvent event) {
+				if (deletedMessageIds != null) {
+					deletedMessageIds.put(event.getMessageIdLong(), Unit.INSTANCE);
 				}
-
-				var webhooksForRemoval = CantileverConfig.INSTANCE.webhooksForRemoval.get();
-				for (long webhookId : webhooksForRemoval.webhookIds()) {
-					if (webhookId == message.getAuthor().getIdLong()) {
-						return !webhooksForRemoval.inverted();
-					}
-				}
-				return webhooksForRemoval.inverted();
 			}
 		});
 	}
