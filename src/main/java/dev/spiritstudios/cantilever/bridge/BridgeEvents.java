@@ -8,16 +8,21 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Random;
 import java.util.WeakHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class BridgeEvents {
 	@Nullable
@@ -109,6 +114,27 @@ public class BridgeEvents {
 
 						BridgeEvents.bridge.sendUserMessageD2M(authorName, event.getMessage().getContentDisplay());
 					}, CantileverConfig.INSTANCE.d2mMessageDelay.get(), TimeUnit.MILLISECONDS);
+					return;
+				}
+
+				// OB*BO CENSORING
+				Pattern direCurse = Pattern.compile("[oO0](?:[^0-9a-zA-Z]*|\\s)*[bB](?:[^0-9a-zA-Z]*|\\s)*[aA](?:[^0-9a-zA-Z]*|\\s)[bB](?:[^0-9a-zA-Z]*|\\s)*[oO0]");
+				Cantilever.LOGGER.info("{}meow", event.getMessage().getContentDisplay());
+				if (direCurse.matcher(event.getMessage().getContentDisplay()).find()) {
+					String[] badbadgirl = {
+						"No.",
+						"Bad.",
+						"How dare you.",
+						">:3",
+						"Do not say ob*bo.",
+						"Seven.",
+						"ob\\*bo more like ob\\*b-cringe",
+						"Await my wrath.",
+						"meow :(",
+						"literally 1984"
+					};
+					BridgeEvents.bridge.sendBasicMessageM2D(badbadgirl[new Random().nextInt(badbadgirl.length)]);
+					BridgeEvents.bridge.sendBasicMessageD2M(new BridgeTextContent(Text.of("%s succumbed to the dire curse".formatted(authorName)), true));
 					return;
 				}
 

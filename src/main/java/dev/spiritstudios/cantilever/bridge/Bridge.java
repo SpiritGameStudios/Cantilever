@@ -12,6 +12,8 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.LightningEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
@@ -22,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static dev.spiritstudios.cantilever.Cantilever.LOGGER;
 
@@ -128,6 +131,19 @@ public class Bridge {
 			return;
 		}
 		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.get() && sender.getDisplayName() != null ? sender.getDisplayName().getString() : sender.getName().getString();
+
+		// OB*BO CENSORING
+		Pattern direCurse = Pattern.compile("[oO0](?:[^0-9a-zA-Z]*|\\s)*[bB](?:[^0-9a-zA-Z]*|\\s)*[aA](?:[^0-9a-zA-Z]*|\\s)[bB](?:[^0-9a-zA-Z]*|\\s)*[oO0]");
+		if (direCurse.matcher(message.getString()).find()) {
+			this.bridgeChannelWebhook.send(
+				new WebhookMessageBuilder()
+					.setUsername(username)
+					.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString()))
+					.append("**%s succumbed to the dire curse**".formatted(username))
+					.build()
+			);
+			return;
+		}
 
 		this.bridgeChannelWebhook.send(
 			new WebhookMessageBuilder()
