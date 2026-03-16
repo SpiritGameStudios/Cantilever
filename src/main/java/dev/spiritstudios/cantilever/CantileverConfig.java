@@ -30,7 +30,7 @@ public class CantileverConfig extends ReflectiveConfig {
 	@Comment("Use a first %s in your TrackedValue to slot in a username, and a second to slot in the chat message content.")
 	public final TrackedValue<String> gameChatFormat = value("<@%s> %s");
 
-	@Comment("Use a %s to slot in the skin texture ID for your head service of choice!")
+	@Comment("Use a %s to slot in the skin texture ID / username for your head service of choice!")
 	public final TrackedValue<String> webhookFaceApi = value("https://vzge.me/face/256/%s.png");
 
 	@Comment("The delay for sending a message from Discord to Minecraft in milliseconds. Set up to make sure that Webhook related Discord Bots such as PluralKit may send messages from users..")
