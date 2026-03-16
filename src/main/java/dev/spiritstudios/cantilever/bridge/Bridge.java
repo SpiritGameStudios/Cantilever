@@ -3,6 +3,7 @@ package dev.spiritstudios.cantilever.bridge;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
 import eu.pb4.styledchat.StyledChatUtils;
@@ -41,18 +42,18 @@ public class Bridge {
 		JDA api = null;
 
 		try {
-			if (Objects.equals(CantileverConfig.INSTANCE.token.get(), CantileverConfig.INSTANCE.token.defaultValue()))
-				throw new IllegalStateException("You forgot to set your bot token in the config file! Please create a discord bot application and add it's token to the config file. We'll sit here and wait.");
+			if (Objects.equals(CantileverConfig.INSTANCE.token.value(), CantileverConfig.INSTANCE.token.getDefaultValue()))
+				throw new IllegalStateException("You forgot to set your bot token in the config file! Please create a discord bot application and add it's token to the config file.");
 
 			api = JDABuilder
 				.createLight(
-					CantileverConfig.INSTANCE.token.get(),
+					CantileverConfig.INSTANCE.token.value(),
 					GatewayIntent.GUILD_MESSAGES,
 					GatewayIntent.MESSAGE_CONTENT
 				)
-				.setActivity(CantileverConfig.INSTANCE.statusMessage.get().isEmpty() ?
+				.setActivity(CantileverConfig.INSTANCE.statusMessage.value().isEmpty() ?
 					null :
-					Activity.of(CantileverConfig.INSTANCE.activityType.get(), CantileverConfig.INSTANCE.statusMessage.get()))
+					Activity.of(CantileverConfig.INSTANCE.activityType.value(), CantileverConfig.INSTANCE.statusMessage.value()))
 				.addEventListeners(new ListenerAdapter() {
 					@Override
 					public void onReady(@NotNull ReadyEvent event) {
@@ -61,7 +62,7 @@ public class Bridge {
 				})
 				.build();
 
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException | IllegalStateException e) {
 			LOGGER.error("API initialisation error whilst starting Cantilever", e);
 		}
 
@@ -73,7 +74,7 @@ public class Bridge {
 
 		LOGGER.trace("Connected to Discord");
 
-		long bridgeChannelId = CantileverConfig.INSTANCE.channelId.get();
+		long bridgeChannelId = CantileverConfig.INSTANCE.channelId.value();
 
 		bridgeChannel = api.getChannelById(TextChannel.class, bridgeChannelId);
 		if (bridgeChannel == null)
@@ -120,11 +121,11 @@ public class Bridge {
 	}
 
 	private String filterMessageM2D(String message) {
-		return filterMessage(CantileverConfig.INSTANCE.m2dReplacements.get(), message);
+		return filterMessage(CantileverConfig.INSTANCE.m2dReplacements.value(), message);
 	}
 
 	private String filterMessageD2M(String message) {
-		return filterMessage(CantileverConfig.INSTANCE.d2mReplacements.get(), message);
+		return filterMessage(CantileverConfig.INSTANCE.d2mReplacements.value(), message);
 	}
 
 	public void sendBasicMessageM2D(String message) {
@@ -141,12 +142,14 @@ public class Bridge {
 			LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
 			return;
 		}
-		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.get() && sender.getDisplayName() != null ? sender.getDisplayName().getString() : sender.getName().getString();
+		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.value() && sender.getDisplayName() != null ? sender.getDisplayName().getString() : sender.getName().getString();
+
+		MinecraftProfileTexture skin = sender.getServer().getSessionService().getTextures(sender.getGameProfile()).skin();
 
 		this.bridgeChannelWebhook.send(
 			new WebhookMessageBuilder()
 				.setUsername(username)
-				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.get().formatted(sender.getUuidAsString()))
+				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(skin == null ? sender.getGameProfile().getName() : skin.getHash()))
 				.append(filterMessageM2D(message.getString()))
 				.build()
 		);
@@ -154,7 +157,7 @@ public class Bridge {
 
 	public void sendUserMessageD2M(String author, String message) {
 		sendBasicMessageD2M(
-			CantileverConfig.INSTANCE.gameChatFormat.get()
+			CantileverConfig.INSTANCE.gameChatFormat.value()
 				.formatted(author, message)
 		);
 	}

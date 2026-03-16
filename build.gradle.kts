@@ -43,6 +43,7 @@ repositories {
 	maven("https://maven.nucleoid.xyz") {
 		name = "Nucleoid"
 	}
+	maven("https://repo.sleeping.town/")
 }
 
 dependencies {
@@ -52,8 +53,8 @@ dependencies {
 
 	modImplementation(libs.fabric.api)
 
-	include(libs.bundles.specter)
-	modImplementation(libs.bundles.specter)
+	include(libs.kaleido)
+	implementation(libs.kaleido)
 
 	implementation(libs.jda) { exclude(module = "opus-java") }
 	shadow(libs.jda) { exclude(module = "opus-java") }
@@ -84,6 +85,7 @@ tasks.shadowJar {
 	tasks.shadowJar.get().configurations.set(arrayListOf(project.configurations.shadow.get()))
 	relocate("net.dv8tion.jda", "dev.spiritstudios.cantilever.jda.shade")
 	relocate("com.eduardomcb.discord.webhook", "dev.spiritstudios.cantilever.discord.webhook.shade")
+	minimize()
 }
 
 tasks.remapJar {

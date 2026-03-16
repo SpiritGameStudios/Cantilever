@@ -23,6 +23,7 @@ public class Cantilever implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		CantileverConfig.INSTANCE.id(); // touch for QOMC
 		ServerLifecycleEvents.SERVER_STARTING.register(
 			id("before_bridge"),
 			server -> {
@@ -40,9 +41,9 @@ public class Cantilever implements ModInitializer {
 			JDA api = bridge().api();
 			if (api == null)
 				return;
-			api.getPresence().setActivity(CantileverConfig.INSTANCE.statusMessage.get().isEmpty() ?
+			api.getPresence().setActivity(CantileverConfig.INSTANCE.statusMessage.value().isEmpty() ?
 				null :
-				Activity.of(CantileverConfig.INSTANCE.activityType.get(), CantileverConfig.INSTANCE.statusMessage.get()));
+				Activity.of(CantileverConfig.INSTANCE.activityType.value(), CantileverConfig.INSTANCE.statusMessage.value()));
 		});
 	}
 

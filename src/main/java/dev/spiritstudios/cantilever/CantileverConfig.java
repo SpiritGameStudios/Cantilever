@@ -1,71 +1,56 @@
 package dev.spiritstudios.cantilever;
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.DataResult;
-import dev.spiritstudios.specter.api.config.Config;
-import dev.spiritstudios.specter.api.config.ConfigHolder;
-import dev.spiritstudios.specter.api.config.Value;
+import folk.sisby.kaleido.api.ReflectiveConfig;
+import folk.sisby.kaleido.lib.quiltconfig.api.annotations.ChangeWarning;
+import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
+import folk.sisby.kaleido.lib.quiltconfig.api.annotations.IntegerRange;
+import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
+import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueMap;
 import net.dv8tion.jda.api.entities.Activity;
+import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.Map;
 
-public class CantileverConfig extends Config<CantileverConfig> {
-	private static final Codec<Long> NON_NEGATIVE_LONG_CODEC = Codec.LONG.validate(l -> {
-		if (l > -1) {
-			return DataResult.success(l);
-		}
-		return DataResult.error(() -> "Value must not be negative.");
-	});
+import static folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type;
 
-	public static final ConfigHolder<CantileverConfig, ?> HOLDER = ConfigHolder.builder(Cantilever.id(Cantilever.MODID), CantileverConfig.class)
-		.build();
+public class CantileverConfig extends ReflectiveConfig {
+	public static final CantileverConfig INSTANCE = CantileverConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", Cantilever.MODID, CantileverConfig.class);
 
-	public static final CantileverConfig INSTANCE = HOLDER.get();
+	@Comment("Your discord bot token. Read the tutorial at https://docs.spiritstudios.dev/use/cantilever for more info.")
+	@ChangeWarning(Type.RequiresRestart)
+	public final TrackedValue<String> token = value("<YOUR_BOT_TOKEN>");
 
-	public final Value<String> token = stringValue("<YOUR_BOT_TOKEN>").build();
+	@Comment("You can get this TrackedValue by enabling developer mode in discord and right clicking the channel you wish to use as your bridge.")
+	@ChangeWarning(Type.RequiresRestart)
+	public final TrackedValue<Long> channelId = value(123456789L);
 
-	public final Value<Long> channelId = value(123456789L, Codec.LONG)
-		.comment("You can get this value by enabling developer mode in discord and right clicking the channel you wish to use as your bridge.")
-		.build();
+	@Comment("Use %s in your TrackedValue to slot in the game event text being sent.")
+	public final TrackedValue<String> gameEventFormat = value("**%s**");
 
-	public final Value<String> gameEventFormat = stringValue("**%s**")
-		.comment("Use %s in your value to slot in the game event text being sent.")
-		.build();
+	@Comment("Use a first %s in your TrackedValue to slot in a username, and a second to slot in the chat message content.")
+	public final TrackedValue<String> gameChatFormat = value("<@%s> %s");
 
-	public final Value<String> gameChatFormat = stringValue("<@%s> %s")
-		.comment("Use a first %s in your value to slot in a username, and a second to slot in the chat message content.")
-		.build();
+	@Comment("Use a %s to slot in the skin texture ID / username for your head service of choice!")
+	public final TrackedValue<String> webhookFaceApi = value("https://vzge.me/face/256/%s.png");
 
-	public final Value<String> webhookFaceApi = stringValue("https://vzge.me/face/256/%s.png")
-		.comment("Use a %s slot to set the player UUID for your head service of choice!")
-		.build();
+	@Comment("The delay for sending a message from Discord to Minecraft in milliseconds. Set up to make sure that Webhook related Discord Bots such as PluralKit may send messages from users..")
+	@IntegerRange(min = 0L, max = Long.MAX_VALUE)
+	public final TrackedValue<Long> d2mMessageDelay = value(0L);
 
-	public final Value<Long> d2mMessageDelay = value(0L, NON_NEGATIVE_LONG_CODEC)
-		.comment("The delay for sending a message from Discord to Minecraft in milliseconds. Set up to make sure that Webhook related Discord Bots such as PluralKit and Tupperbox may send messages from users..")
-		.build();
+	@Comment("The status message to show on the bridge bot")
+	@ChangeWarning(value = Type.RequiresRestart, customMessage = "Requires restart or /reload")
+	public final TrackedValue<String> statusMessage = value("");
 
-	public final Value<String> statusMessage = stringValue("")
-		.build();
+	@Comment("The activity type to show on the bridge bot")
+	@ChangeWarning(value = Type.RequiresRestart, customMessage = "Requires restart or /reload")
+	public final TrackedValue<Activity.ActivityType> activityType = value(Activity.ActivityType.PLAYING);
 
-	public final Value<Activity.ActivityType> activityType = enumValue(Activity.ActivityType.PLAYING, Activity.ActivityType.class)
-		.comment("Options: [playing, streaming, listening, watching, competing]")
-		.build();
+	@Comment("Whether to use nicknames defined by players or Minecraft account name on Discord")
+	public final TrackedValue<Boolean> useMinecraftNicknames = value(true);
 
-	public final Value<Boolean> useMinecraftNicknames = booleanValue(true)
-		.comment("Whether to use nicknames defined by players or Minecraft account name on Discord")
-		.build();
+	@Comment("A map of text to text replacements from MC -> Discord; useful for Styled Chat Emoji")
+	public final TrackedValue<Map<String, String>> m2dReplacements = value(ValueMap.builder("").build());
 
-	public final Value<Map<String, String>> m2dReplacements = value(
-		Map.of(),
-		Codec.unboundedMap(Codec.STRING, Codec.STRING)
-	)
-		.comment("A map of text to text replacements from MC -> Discord; useful for Styled Chat Emoji")
-		.build();
-
-	public final Value<Map<String, String>> d2mReplacements = value(
-		Map.of(),
-		Codec.unboundedMap(Codec.STRING, Codec.STRING)
-	)
-		.comment("A map of text to text replacements from Discord -> MC; useful for Styled Chat Emoji")
-		.build();
+	@Comment("A map of text to text replacements from Discord -> MC; useful for Styled Chat Emoji")
+	public final TrackedValue<Map<String, String>> d2mReplacements = value(ValueMap.builder("").build());
 }
