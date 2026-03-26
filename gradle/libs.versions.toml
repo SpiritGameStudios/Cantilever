@@ -1,27 +1,31 @@
 [versions]
-fabric_loom = "1.10-SNAPSHOT"
-minotaur = "2.+"
-shadow = "9.0.0-beta7"
+minotaur = "2.+" # https://plugins.gradle.org/plugin/com.modrinth.minotaur
+shadow = "9.4.0" # https://plugins.gradle.org/plugin/com.gradleup.shadow
 
-minecraft = "1.21.5"
-yarn = "1.21.5+build.1"
+minecraft = "1.21.11"
+yarn = "1.21.11+build.4"
 
-fabric_loader = "0.16.14"
-fabric_api = "0.126.0+1.21.5"
+# https://fabricmc.net/develop/
+fabric_loader = "0.18.4"
+fabric_api = "0.141.3+1.21.11"
+fabric_loom = "1.15-SNAPSHOT"
 
-kaleido = "0.3.3+1.3.2"
+kaleido = "0.3.3+1.3.2" # https://repo.sleeping.town/folk/sisby/kaleido-config/
 
-jda = "5.5.1"
-discord-webhooks = "0.8.4"
+jda = "6.3.2" # https://mvnrepository.com/artifact/net.dv8tion/JDA
+discord-webhooks = "0.8.4" # https://mvnrepository.com/artifact/club.minnced/discord-webhooks
 
-styled-chat = "E1RdcKyb"
-pb4-api-predicate = "0.6.0+1.21.2"
-pb4-api-placeholder = "2.6.1+1.21.5"
-pb4-api-playerdata = "0.7.0+1.21.5"
-fabric-permissions = "0.3.3"
+styled-chat = "nW0Cfq7D" # https://modrinth.com/mod/styled-chat/versions / this is a Modrinth version ID
+
+# https://maven.nucleoid.xyz/eu/pb4
+pb4-api-predicate = "0.7.0+1.21.11"
+pb4-api-placeholder = "2.8.2+1.21.10"
+pb4-api-playerdata = "0.9.1+1.21.11"
+
+fabric-permissions = "0.6.1" # https://github.com/lucko/fabric-permissions-api/blob/master/USAGE.md
 
 [plugins]
-fabric_loom = { id = "fabric-loom", version.ref = "fabric_loom" }
+fabric_loom = { id = "net.fabricmc.fabric-loom-remap", version.ref = "fabric_loom" }
 minotaur = { id = "com.modrinth.minotaur", version.ref = "minotaur" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 

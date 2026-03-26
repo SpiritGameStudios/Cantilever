@@ -4,6 +4,7 @@ import folk.sisby.kaleido.api.ReflectiveConfig;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.ChangeWarning;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.IntegerRange;
+import folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.TrackedValue;
 import folk.sisby.kaleido.lib.quiltconfig.api.values.ValueMap;
 import net.dv8tion.jda.api.entities.Activity;

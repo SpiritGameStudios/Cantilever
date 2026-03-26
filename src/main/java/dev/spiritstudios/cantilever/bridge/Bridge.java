@@ -16,12 +16,12 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.message.SignedMessage;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -136,7 +136,7 @@ public class Bridge {
 		bridgeChannel.sendMessage(message).complete();
 	}
 
-	public void sendWebhookMessageM2D(Text message, ServerPlayerEntity sender) {
+	public void sendWebhookMessageM2D(Component message, ServerPlayer sender) {
 		if (this.bridgeChannelWebhook == null) {
 			sendBasicMessageM2D(message.getString());
 			LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
@@ -163,9 +163,9 @@ public class Bridge {
 	}
 
 	public void sendBasicMessageD2M(String text) {
-		SignedMessage message = SignedMessage.ofUnsigned(filterMessageD2M(text));
-		ServerCommandSource commandSource = this.server.getCommandSource();
-		Text formattedText;
+		PlayerChatMessage message = PlayerChatMessage.system(filterMessageD2M(text));
+		CommandSourceStack commandSource = this.server.createCommandSourceStack();
+		Component formattedText;
 		if (FabricLoader.getInstance().isModLoaded("styledchat")) {
 			formattedText = StyledChatUtils.formatMessage(
 				message,
@@ -173,11 +173,11 @@ public class Bridge {
 				Cantilever.D2M_MESSAGE_TYPE
 			);
 		} else {
-			formattedText = message.getContent();
+			formattedText = message.decoratedContent();
 		}
-		MutableText bridgeText =
-			MutableText.of(new BridgeTextContent(formattedText));
-		this.server.getPlayerManager().broadcast(bridgeText, false);
+		MutableComponent bridgeText =
+			MutableComponent.create(new BridgeTextContent(formattedText));
+		this.server.getPlayerList().broadcastSystemMessage(bridgeText, false);
 	}
 
 	public JDA api() {
