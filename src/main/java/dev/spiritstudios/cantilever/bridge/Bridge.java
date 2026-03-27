@@ -3,7 +3,6 @@ package dev.spiritstudios.cantilever.bridge;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
-import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
 import eu.pb4.styledchat.StyledChatUtils;
@@ -143,8 +142,6 @@ public class Bridge {
 			return;
 		}
 		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.value() ? sender.getDisplayName().getString() : sender.getName().getString();
-
-		//MinecraftProfileTexture skin = sender.getSessionService().getTextures(sender.getGameProfile()).skin();
 
 		this.bridgeChannelWebhook.send(
 			new WebhookMessageBuilder()
