@@ -142,14 +142,14 @@ public class Bridge {
 			LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
 			return;
 		}
-		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.value() && sender.getDisplayName() != null ? sender.getDisplayName().getString() : sender.getName().getString();
+		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.value() ? sender.getDisplayName().getString() : sender.getName().getString();
 
-		MinecraftProfileTexture skin = sender.getServer().getSessionService().getTextures(sender.getGameProfile()).skin();
+		//MinecraftProfileTexture skin = sender.getSessionService().getTextures(sender.getGameProfile()).skin();
 
 		this.bridgeChannelWebhook.send(
 			new WebhookMessageBuilder()
 				.setUsername(username)
-				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(skin == null ? sender.getGameProfile().getName() : skin.getHash()))
+				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(sender.getGameProfile().name()))
 				.append(filterMessageM2D(message.getString()))
 				.build()
 		);

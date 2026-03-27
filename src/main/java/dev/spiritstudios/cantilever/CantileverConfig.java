@@ -12,8 +12,6 @@ import net.fabricmc.loader.api.FabricLoader;
 
 import java.util.Map;
 
-import static folk.sisby.kaleido.lib.quiltconfig.api.metadata.ChangeWarning.Type;
-
 public class CantileverConfig extends ReflectiveConfig {
 	public static final CantileverConfig INSTANCE = CantileverConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", Cantilever.MODID, CantileverConfig.class);
 
