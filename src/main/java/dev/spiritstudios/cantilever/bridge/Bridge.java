@@ -3,8 +3,10 @@ package dev.spiritstudios.cantilever.bridge;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.CantileverConfig;
+import dev.spiritstudios.cantilever.CantileverTokenConfig;
 import eu.pb4.styledchat.StyledChatUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -41,12 +43,12 @@ public class Bridge {
 		JDA api = null;
 
 		try {
-			if (Objects.equals(CantileverConfig.INSTANCE.token.value(), CantileverConfig.INSTANCE.token.getDefaultValue()))
+			if (Objects.equals(CantileverTokenConfig.INSTANCE.token.value(), CantileverTokenConfig.INSTANCE.token.getDefaultValue()))
 				throw new IllegalStateException("You forgot to set your bot token in the config file! Please create a discord bot application and add it's token to the config file.");
 
 			api = JDABuilder
 				.createLight(
-					CantileverConfig.INSTANCE.token.value(),
+					CantileverTokenConfig.INSTANCE.token.value(),
 					GatewayIntent.GUILD_MESSAGES,
 					GatewayIntent.MESSAGE_CONTENT
 				)
@@ -73,7 +75,7 @@ public class Bridge {
 
 		LOGGER.trace("Connected to Discord");
 
-		long bridgeChannelId = CantileverConfig.INSTANCE.channelId.value();
+		long bridgeChannelId = CantileverTokenConfig.INSTANCE.channelId.value();
 
 		bridgeChannel = api.getChannelById(TextChannel.class, bridgeChannelId);
 		if (bridgeChannel == null)
@@ -135,7 +137,7 @@ public class Bridge {
 		bridgeChannel.sendMessage(message).complete();
 	}
 
-	public void sendWebhookMessageM2D(Component message, ServerPlayer sender) {
+	public void sendWebhookMessageM2D(Component message, MinecraftServer server, ServerPlayer sender) {
 		if (this.bridgeChannelWebhook == null) {
 			sendBasicMessageM2D(message.getString());
 			LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
@@ -143,10 +145,12 @@ public class Bridge {
 		}
 		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.value() ? sender.getDisplayName().getString() : sender.getName().getString();
 
+		MinecraftProfileTexture skin = server.services().sessionService().getTextures(sender.getGameProfile()).skin();
+
 		this.bridgeChannelWebhook.send(
 			new WebhookMessageBuilder()
 				.setUsername(username)
-				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(sender.getGameProfile().name()))
+				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(skin == null ? sender.getGameProfile().name() : skin.getHash()))
 				.append(filterMessageM2D(message.getString()))
 				.build()
 		);
