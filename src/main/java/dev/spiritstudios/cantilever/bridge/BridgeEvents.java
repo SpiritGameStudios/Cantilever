@@ -58,13 +58,13 @@ public class BridgeEvents {
 		ServerMessageEvents.COMMAND_MESSAGE.register((message, source, parameters) -> {
 			if (message.decoratedContent().getContents() instanceof BridgeTextContent) return;
 			if (source.isPlayer()) {
-				BridgeEvents.bridge.sendWebhookMessageM2D(message.decoratedContent(), source.getPlayer());
+				BridgeEvents.bridge.sendWebhookMessageM2D(message.decoratedContent(), source.getServer(), source.getPlayer());
 				return;
 			}
 			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.value().formatted(message.decoratedContent().getString()));
 		});
 
-		ServerMessageEvents.CHAT_MESSAGE.register((message, user, params) -> BridgeEvents.bridge.sendWebhookMessageM2D(message.decoratedContent(), user));
+		ServerMessageEvents.CHAT_MESSAGE.register((message, user, params) -> BridgeEvents.bridge.sendWebhookMessageM2D(message.decoratedContent(), user.createCommandSourceStack().getServer(), user));
 	}
 
 	private static ScheduledExecutorService scheduler;
