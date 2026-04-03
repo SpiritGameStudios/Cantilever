@@ -29,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import static dev.spiritstudios.cantilever.Cantilever.LOGGER;
 
@@ -37,6 +38,9 @@ public class Bridge {
 	private TextChannel bridgeChannel;
 	private WebhookClient bridgeChannelWebhook;
 	public final MinecraftServer server;
+	public final Map<Pattern, String> M2D_ESCAPES = Map.of(
+		Pattern.compile("^-"), "\\\\-"
+	);
 
 	public Bridge(MinecraftServer server) {
 		this.server = server;
@@ -117,6 +121,9 @@ public class Bridge {
 		final String[] replacedMessage = {message};
 		map.forEach(
 			(key, replacement) -> replacedMessage[0] = replacedMessage[0].replace(key, replacement)
+		);
+		M2D_ESCAPES.forEach(
+			(pattern, replacement) ->  replacedMessage[0] = pattern.matcher(replacedMessage[0]).replaceAll(replacement)
 		);
 		return replacedMessage[0];
 	}
