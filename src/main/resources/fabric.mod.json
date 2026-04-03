@@ -4,7 +4,7 @@
 	"version": "${mod_version}",
 	"name": "Cantilever",
 	"description": "No-nonsense Minecraft ↔ Discord bridge",
-	"authors": [],
+	"authors": ["Spirit Studios"],
 	"contact": {
 		"repo": "https://github.com/SpiritGameStudios/Cantilever",
 		"issues": "https://github.com/SpiritGameStudios/Cantilever/issues"

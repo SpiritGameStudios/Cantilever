@@ -5,18 +5,18 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
-import net.minecraft.network.message.MessageType;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.ChatType;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Cantilever implements ModInitializer {
 	public static final String MODID = "cantilever";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MODID);
-	public static final RegistryKey<MessageType> D2M_MESSAGE_TYPE = RegistryKey.of(
-		RegistryKeys.MESSAGE_TYPE,
+	public static final ResourceKey<ChatType> D2M_MESSAGE_TYPE = ResourceKey.create(
+		Registries.CHAT_TYPE,
 		id("d2m")
 	);
 	private static Bridge bridge;
@@ -52,6 +52,6 @@ public class Cantilever implements ModInitializer {
 	}
 
 	public static Identifier id(String path) {
-		return Identifier.of(MODID, path);
+		return Identifier.fromNamespaceAndPath(MODID, path);
 	}
 }

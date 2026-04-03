@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +30,7 @@ public class BridgeEvents {
 		if (BridgeEvents.bridge == null)
 			return;
 		ServerLifecycleEvents.SERVER_STARTING.register(
-			Identifier.of(Cantilever.MODID, "after_bridge"),
+			Identifier.fromNamespaceAndPath(Cantilever.MODID, "after_bridge"),
 			server -> BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.value().formatted("Server starting..."))
 		);
 
@@ -51,20 +51,20 @@ public class BridgeEvents {
 		});
 
 		ServerMessageEvents.GAME_MESSAGE.register((server, message, overlay) -> {
-			if (message.getContent() instanceof BridgeTextContent) return;
+			if (message.getContents() instanceof BridgeTextContent) return;
 			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.value().formatted(message.getString()));
 		});
 
 		ServerMessageEvents.COMMAND_MESSAGE.register((message, source, parameters) -> {
-			if (message.getContent().getContent() instanceof BridgeTextContent) return;
-			if (source.isExecutedByPlayer()) {
-				BridgeEvents.bridge.sendWebhookMessageM2D(message.getContent(), source.getPlayer());
+			if (message.decoratedContent().getContents() instanceof BridgeTextContent) return;
+			if (source.isPlayer()) {
+				BridgeEvents.bridge.sendWebhookMessageM2D(message.decoratedContent(), source.getPlayer());
 				return;
 			}
-			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.value().formatted(message.getContent().getString()));
+			BridgeEvents.bridge.sendBasicMessageM2D(CantileverConfig.INSTANCE.gameEventFormat.value().formatted(message.decoratedContent().getString()));
 		});
 
-		ServerMessageEvents.CHAT_MESSAGE.register((message, user, params) -> BridgeEvents.bridge.sendWebhookMessageM2D(message.getContent(), user));
+		ServerMessageEvents.CHAT_MESSAGE.register((message, user, params) -> BridgeEvents.bridge.sendWebhookMessageM2D(message.decoratedContent(), user));
 	}
 
 	private static ScheduledExecutorService scheduler;

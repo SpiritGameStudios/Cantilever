@@ -1,22 +1,26 @@
 package dev.spiritstudios.cantilever.bridge;
 
 import com.mojang.serialization.MapCodec;
-import dev.spiritstudios.cantilever.Cantilever;
-import net.minecraft.text.*;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.ComponentSerialization;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
+import org.jspecify.annotations.NonNull;
 
 import java.util.Optional;
 
-public record BridgeTextContent(Text content) implements TextContent {
-	public static MapCodec<BridgeTextContent> CODEC = MapCodec.assumeMapUnsafe(TextCodecs.CODEC
+public record BridgeTextContent(Component content) implements ComponentContents {
+	public static MapCodec<BridgeTextContent> CODEC = MapCodec.assumeMapUnsafe(ComponentSerialization.CODEC
 		.xmap(BridgeTextContent::new, content -> content.content));
 
-	public static final TextContent.Type<BridgeTextContent> TYPE = new Type<>(
+	/* public static final ComponentContents.Type<BridgeTextContent> TYPE = new Type<>(
 		CODEC,
 		Cantilever.MODID + ":bridge"
-	);
+	); */
 
 	@Override
-	public <T> Optional<T> visit(StringVisitable.Visitor<T> visitor) {
+	public <T> @NonNull Optional<T> visit(FormattedText.@NonNull ContentConsumer<T> visitor) {
 		Optional<T> visitResult = content.visit(visitor);
 		if (visitResult.isEmpty()) {
 			// This is a workaround for the game resolving the Bridge content as empty. Don't ask why!
@@ -26,12 +30,12 @@ public record BridgeTextContent(Text content) implements TextContent {
 	}
 
 	@Override
-	public <T> Optional<T> visit(StringVisitable.StyledVisitor<T> visitor, Style style) {
-		return content.visit(visitor, style);
+	public @NonNull MapCodec<? extends ComponentContents> codec() {
+		return CODEC;
 	}
 
 	@Override
-	public Type<?> getType() {
-		return TYPE;
+	public <T> @NonNull Optional<T> visit(FormattedText.@NonNull StyledContentConsumer<T> visitor, @NonNull Style style) {
+		return content.visit(visitor, style);
 	}
 }
