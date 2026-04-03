@@ -39,7 +39,7 @@ public class Bridge {
 	private WebhookClient bridgeChannelWebhook;
 	public final MinecraftServer server;
 	public final Map<Pattern, String> M2D_ESCAPES = Map.of(
-		Pattern.compile("^-"), "\\\\-"
+		Pattern.compile("^-"), "‒"
 	);
 
 	public Bridge(MinecraftServer server) {
