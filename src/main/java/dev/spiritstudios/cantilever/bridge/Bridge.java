@@ -4,7 +4,8 @@ import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import dev.spiritstudios.cantilever.Cantilever;
-import dev.spiritstudios.cantilever.CantileverConfig;
+import dev.spiritstudios.cantilever.config.CantileverConfig;
+import dev.spiritstudios.cantilever.config.CantileverDiscordConfig;
 import eu.pb4.styledchat.StyledChatUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -41,12 +42,12 @@ public class Bridge {
 		JDA api = null;
 
 		try {
-			if (Objects.equals(CantileverConfig.INSTANCE.token.value(), CantileverConfig.INSTANCE.token.getDefaultValue()))
+			if (Objects.equals(CantileverDiscordConfig.INSTANCE.token.value(), CantileverDiscordConfig.INSTANCE.token.getDefaultValue()))
 				throw new IllegalStateException("You forgot to set your bot token in the config file! Please create a discord bot application and add it's token to the config file.");
 
 			api = JDABuilder
 				.createLight(
-					CantileverConfig.INSTANCE.token.value(),
+					CantileverDiscordConfig.INSTANCE.token.value(),
 					GatewayIntent.GUILD_MESSAGES,
 					GatewayIntent.MESSAGE_CONTENT
 				)
@@ -73,7 +74,7 @@ public class Bridge {
 
 		LOGGER.trace("Connected to Discord");
 
-		long bridgeChannelId = CantileverConfig.INSTANCE.channelId.value();
+		long bridgeChannelId = CantileverDiscordConfig.INSTANCE.channelId.value();
 
 		bridgeChannel = api.getChannelById(TextChannel.class, bridgeChannelId);
 		if (bridgeChannel == null)

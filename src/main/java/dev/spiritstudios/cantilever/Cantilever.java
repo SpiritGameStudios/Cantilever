@@ -1,6 +1,7 @@
 package dev.spiritstudios.cantilever;
 
 import dev.spiritstudios.cantilever.bridge.Bridge;
+import dev.spiritstudios.cantilever.config.CantileverConfig;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
 import net.fabricmc.api.ModInitializer;

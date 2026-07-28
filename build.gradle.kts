@@ -44,6 +44,7 @@ repositories {
 		name = "Nucleoid"
 	}
 	maven("https://repo.sleeping.town/")
+	maven("https://maven.quiltmc.org/repository/release/")
 }
 
 dependencies {
@@ -52,8 +53,10 @@ dependencies {
 
 	implementation(libs.fabric.api)
 
-	include(libs.kaleido)
-	implementation(libs.kaleido)
+	include(libs.config.kaleido)
+	implementation(libs.config.kaleido)
+
+	// compileOnly(libs.config.night)
 
 	implementation(libs.jda) { exclude(module = "opus-java") }
 	shadow(libs.jda) { exclude(module = "opus-java") }
@@ -110,7 +113,7 @@ modrinth {
 	projectId.set(mod.id)
 	versionNumber.set(mod.version)
 	uploadFile.set(tasks.shadowJar.get().archiveFile)
-	gameVersions.addAll(libs.versions.minecraft.get(), "1.21.4")
+	gameVersions.addAll(libs.versions.minecraft.get())
 	loaders.addAll("fabric", "quilt")
 	syncBodyFrom.set(rootProject.file("README.md").readText())
 	dependencies {

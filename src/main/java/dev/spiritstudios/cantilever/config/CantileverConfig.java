@@ -1,5 +1,6 @@
-package dev.spiritstudios.cantilever;
+package dev.spiritstudios.cantilever.config;
 
+import dev.spiritstudios.cantilever.Cantilever;
 import folk.sisby.kaleido.api.ReflectiveConfig;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.ChangeWarning;
 import folk.sisby.kaleido.lib.quiltconfig.api.annotations.Comment;
@@ -13,15 +14,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import java.util.Map;
 
 public class CantileverConfig extends ReflectiveConfig {
-	public static final CantileverConfig INSTANCE = CantileverConfig.createToml(FabricLoader.getInstance().getConfigDir(), "", Cantilever.MODID, CantileverConfig.class);
-
-	@Comment("Your discord bot token. Read the tutorial at https://docs.spiritstudios.dev/use/cantilever for more info.")
-	@ChangeWarning(Type.RequiresRestart)
-	public final TrackedValue<String> token = value("<YOUR_BOT_TOKEN>");
-
-	@Comment("You can get this TrackedValue by enabling developer mode in discord and right clicking the channel you wish to use as your bridge.")
-	@ChangeWarning(Type.RequiresRestart)
-	public final TrackedValue<Long> channelId = value(123456789L);
+	public static final CantileverConfig INSTANCE = CantileverConfig.createToml(FabricLoader.getInstance().getConfigDir(), Cantilever.MODID, Cantilever.MODID, CantileverConfig.class);
 
 	@Comment("Use %s in your TrackedValue to slot in the game event text being sent.")
 	public final TrackedValue<String> gameEventFormat = value("**%s**");

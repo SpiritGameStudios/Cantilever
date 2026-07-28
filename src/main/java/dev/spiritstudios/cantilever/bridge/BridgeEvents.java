@@ -1,7 +1,7 @@
 package dev.spiritstudios.cantilever.bridge;
 
 import dev.spiritstudios.cantilever.Cantilever;
-import dev.spiritstudios.cantilever.CantileverConfig;
+import dev.spiritstudios.cantilever.config.CantileverConfig;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -26,6 +26,7 @@ public class BridgeEvents {
 		registerDiscordEvents();
 	}
 
+	@SuppressWarnings("unused")
 	private static void registerMinecraftEvents() {
 		if (BridgeEvents.bridge == null)
 			return;
