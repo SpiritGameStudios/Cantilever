@@ -44,17 +44,19 @@ repositories {
 		name = "Nucleoid"
 	}
 	maven("https://repo.sleeping.town/")
+	maven("https://maven.quiltmc.org/repository/release/")
 }
 
 dependencies {
 	minecraft(libs.minecraft)
-	mappings(variantOf(libs.yarn) { classifier("v2") })
-	modImplementation(libs.fabric.loader)
+	implementation(libs.fabric.loader)
 
-	modImplementation(libs.fabric.api)
+	implementation(libs.fabric.api)
 
-	include(libs.kaleido)
-	implementation(libs.kaleido)
+	include(libs.config.kaleido)
+	implementation(libs.config.kaleido)
+
+	// compileOnly(libs.config.night)
 
 	implementation(libs.jda) { exclude(module = "opus-java") }
 	shadow(libs.jda) { exclude(module = "opus-java") }
@@ -62,11 +64,11 @@ dependencies {
 	implementation(libs.discordwebhooks)
 	shadow(libs.discordwebhooks)
 
-	modImplementation(libs.styled.chat)
-	modImplementation(libs.pb4.api.predicate)
-	modImplementation(libs.pb4.api.placeholder)
-	modImplementation(libs.pb4.api.playerdata)
-	modImplementation(libs.fabric.permissions)
+	implementation(libs.styled.chat)
+	implementation(libs.pb4.api.predicate)
+	implementation(libs.pb4.api.placeholder)
+	implementation(libs.pb4.api.playerdata)
+	implementation(libs.fabric.permissions)
 }
 
 tasks.processResources {
@@ -82,32 +84,27 @@ tasks.processResources {
 }
 
 tasks.shadowJar {
+	archiveClassifier = ""
 	tasks.shadowJar.get().configurations.set(arrayListOf(project.configurations.shadow.get()))
 	relocate("net.dv8tion.jda", "dev.spiritstudios.cantilever.jda.shade")
 	relocate("com.eduardomcb.discord.webhook", "dev.spiritstudios.cantilever.discord.webhook.shade")
 	minimize()
 }
 
-tasks.remapJar {
-	dependsOn(tasks.shadowJar)
-	mustRunAfter(tasks.shadowJar)
-
-	inputFile.set(tasks.shadowJar.get().archiveFile)
-}
-
 java {
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
+	sourceCompatibility = JavaVersion.VERSION_25
+	targetCompatibility = JavaVersion.VERSION_25
 }
 
 tasks.withType<JavaCompile> {
 	options.encoding = "UTF-8"
-	options.release = 21
+	options.release = 25
 }
 
 tasks.jar {
+	archiveClassifier = "slim"
 	from("LICENSE") { rename { "${it}_${base.archivesName.get()}" } }
 }
 
@@ -115,8 +112,8 @@ modrinth {
 	token.set(System.getenv("MODRINTH_TOKEN"))
 	projectId.set(mod.id)
 	versionNumber.set(mod.version)
-	uploadFile.set(tasks.remapJar)
-	gameVersions.addAll(libs.versions.minecraft.get(), "1.21.4")
+	uploadFile.set(tasks.shadowJar.get().archiveFile)
+	gameVersions.addAll(libs.versions.minecraft.get())
 	loaders.addAll("fabric", "quilt")
 	syncBodyFrom.set(rootProject.file("README.md").readText())
 	dependencies {

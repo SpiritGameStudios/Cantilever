@@ -5,7 +5,8 @@ import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
 import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import dev.spiritstudios.cantilever.Cantilever;
-import dev.spiritstudios.cantilever.CantileverConfig;
+import dev.spiritstudios.cantilever.config.CantileverConfig;
+import dev.spiritstudios.cantilever.config.CantileverDiscordConfig;
 import eu.pb4.styledchat.StyledChatUtils;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -16,12 +17,12 @@ import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.message.SignedMessage;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.PlayerChatMessage;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,12 +43,12 @@ public class Bridge {
 		JDA api = null;
 
 		try {
-			if (Objects.equals(CantileverConfig.INSTANCE.token.value(), CantileverConfig.INSTANCE.token.getDefaultValue()))
+			if (Objects.equals(CantileverDiscordConfig.INSTANCE.token.value(), CantileverDiscordConfig.INSTANCE.token.getDefaultValue()))
 				throw new IllegalStateException("You forgot to set your bot token in the config file! Please create a discord bot application and add it's token to the config file.");
 
 			api = JDABuilder
 				.createLight(
-					CantileverConfig.INSTANCE.token.value(),
+					CantileverDiscordConfig.INSTANCE.token.value(),
 					GatewayIntent.GUILD_MESSAGES,
 					GatewayIntent.MESSAGE_CONTENT
 				)
@@ -74,7 +75,7 @@ public class Bridge {
 
 		LOGGER.trace("Connected to Discord");
 
-		long bridgeChannelId = CantileverConfig.INSTANCE.channelId.value();
+		long bridgeChannelId = CantileverDiscordConfig.INSTANCE.channelId.value();
 
 		bridgeChannel = api.getChannelById(TextChannel.class, bridgeChannelId);
 		if (bridgeChannel == null)
@@ -136,20 +137,24 @@ public class Bridge {
 		bridgeChannel.sendMessage(message).complete();
 	}
 
-	public void sendWebhookMessageM2D(Text message, ServerPlayerEntity sender) {
+	public void sendWebhookMessageM2D(Component message, MinecraftServer server, ServerPlayer sender) {
 		if (this.bridgeChannelWebhook == null) {
 			sendBasicMessageM2D(message.getString());
 			LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
 			return;
 		}
-		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.value() && sender.getDisplayName() != null ? sender.getDisplayName().getString() : sender.getName().getString();
+		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.value() ? sender.getDisplayName().getString() : sender.getName().getString();
 
-		MinecraftProfileTexture skin = sender.getServer().getSessionService().getTextures(sender.getGameProfile()).skin();
+		MinecraftProfileTexture skin = server.services().sessionService().getTextures(sender.getGameProfile()).skin();
 
 		this.bridgeChannelWebhook.send(
 			new WebhookMessageBuilder()
 				.setUsername(username)
-				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(skin == null ? sender.getGameProfile().getName() : skin.getHash()))
+				.setAvatarUrl(
+					CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(
+						skin != null ? skin.getHash() : sender.getGameProfile().name()
+					)
+				)
 				.append(filterMessageM2D(message.getString()))
 				.build()
 		);
@@ -163,9 +168,9 @@ public class Bridge {
 	}
 
 	public void sendBasicMessageD2M(String text) {
-		SignedMessage message = SignedMessage.ofUnsigned(filterMessageD2M(text));
-		ServerCommandSource commandSource = this.server.getCommandSource();
-		Text formattedText;
+		PlayerChatMessage message = PlayerChatMessage.system(filterMessageD2M(text));
+		CommandSourceStack commandSource = this.server.createCommandSourceStack();
+		Component formattedText;
 		if (FabricLoader.getInstance().isModLoaded("styledchat")) {
 			formattedText = StyledChatUtils.formatMessage(
 				message,
@@ -173,11 +178,11 @@ public class Bridge {
 				Cantilever.D2M_MESSAGE_TYPE
 			);
 		} else {
-			formattedText = message.getContent();
+			formattedText = message.decoratedContent();
 		}
-		MutableText bridgeText =
-			MutableText.of(new BridgeTextContent(formattedText));
-		this.server.getPlayerManager().broadcast(bridgeText, false);
+		MutableComponent bridgeText =
+			MutableComponent.create(new BridgeTextContent(formattedText));
+		this.server.getPlayerList().broadcastSystemMessage(bridgeText, false);
 	}
 
 	public JDA api() {
