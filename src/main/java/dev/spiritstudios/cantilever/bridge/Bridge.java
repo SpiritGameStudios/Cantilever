@@ -3,6 +3,7 @@ package dev.spiritstudios.cantilever.bridge;
 import club.minnced.discord.webhook.WebhookClient;
 import club.minnced.discord.webhook.external.JDAWebhookClient;
 import club.minnced.discord.webhook.send.WebhookMessageBuilder;
+import com.mojang.authlib.minecraft.MinecraftProfileTexture;
 import dev.spiritstudios.cantilever.Cantilever;
 import dev.spiritstudios.cantilever.config.CantileverConfig;
 import dev.spiritstudios.cantilever.config.CantileverDiscordConfig;
@@ -136,7 +137,7 @@ public class Bridge {
 		bridgeChannel.sendMessage(message).complete();
 	}
 
-	public void sendWebhookMessageM2D(Component message, ServerPlayer sender) {
+	public void sendWebhookMessageM2D(Component message, MinecraftServer server, ServerPlayer sender) {
 		if (this.bridgeChannelWebhook == null) {
 			sendBasicMessageM2D(message.getString());
 			LOGGER.error("Webhook does not exist in channel {}. Please make sure to allow your bot to manage webhooks!", bridgeChannel.getId());
@@ -144,10 +145,16 @@ public class Bridge {
 		}
 		String username = CantileverConfig.INSTANCE.useMinecraftNicknames.value() ? sender.getDisplayName().getString() : sender.getName().getString();
 
+		MinecraftProfileTexture skin = server.services().sessionService().getTextures(sender.getGameProfile()).skin();
+
 		this.bridgeChannelWebhook.send(
 			new WebhookMessageBuilder()
 				.setUsername(username)
-				.setAvatarUrl(CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(sender.getGameProfile().name()))
+				.setAvatarUrl(
+					CantileverConfig.INSTANCE.webhookFaceApi.value().formatted(
+						skin != null ? skin.getHash() : sender.getGameProfile().name()
+					)
+				)
 				.append(filterMessageM2D(message.getString()))
 				.build()
 		);
